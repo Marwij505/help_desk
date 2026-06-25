@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- =========================================================
+         INFORMASI DASAR HALAMAN
+         ========================================================= -->
+    <meta charset="UTF-8">
+
+    <!-- Membuat tampilan menyesuaikan ukuran desktop, tablet, dan mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Deskripsi website untuk mesin pencarian -->
+    <meta
+        name="description"
+        content="Compass Campus atau ComCam adalah platform pencarian kampus, program studi, rekomendasi minat, dan bantuan pendidikan tinggi di Indonesia."
+    >
+
+    <meta
+        name="keywords"
+        content="ComCam, Compass Campus, kampus Indonesia, program studi, rekomendasi jurusan, help desk kampus"
+    >
+
+    <meta name="author" content="Compass Campus Team">
+
+    <title>Compass Campus | Temukan Arah Masa Depanmu</title>
+
+    <!--
+        File CSS akan dibuat pada tahap berikutnya.
+        Lokasi file:
+        static/css/style.css
+    -->
+    <link
+        rel="stylesheet"
+        href="../static/css/index.css"
+    >
+</head>
+
+<body>
+
+    <!-- =========================================================
+         KUMPULAN IKON SVG
+         Ikon disimpan langsung di HTML agar tidak memerlukan
+         library eksternal seperti Font Awesome.
+         ========================================================= -->
+    <svg class="svg-sprite" aria-hidden="true">
+
+        <!-- Ikon kompas -->
+        <symbol id="icon-compass" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M15.5 8.5 14 14l-5.5 1.5L10 10z"></path>
+        </symbol>
+
+        <!-- Ikon pencarian -->
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16 16 4 4"></path>
+        </symbol>
+
+        <!-- Ikon menu mobile -->
+        <symbol id="icon-menu" viewBox="0 0 24 24">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+        </symbol>
+
+        <!-- Ikon panah -->
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+        </symbol>
+
+        <!-- Ikon topi wisuda -->
+        <symbol id="icon-graduation" viewBox="0 0 24 24">
+            <path d="m2 9 10-5 10 5-10 5z"></path>
+            <path d="M6 11v5c3 2 9 2 12 0v-5"></path>
+            <path d="M22 9v6"></path>
+        </symbol>
+
+        <!-- Ikon pemetaan minat -->
+        <symbol id="icon-interest" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"></circle>
+            <circle cx="12" cy="12" r="8"></circle>
+            <path d="M12 2v3"></path>
+            <path d="M12 19v3"></path>
+            <path d="M2 12h3"></path>
+            <path d="M19 12h3"></path>
+        </symbol>
+
+        <!-- Ikon gedung kampus -->
+        <symbol id="icon-building" viewBox="0 0 24 24">
+            <path d="M3 21h18"></path>
+            <path d="M5 21V8l7-4 7 4v13"></path>
+            <path d="M9 21v-5h6v5"></path>
+            <path d="M8 10h1"></path>
+            <path d="M12 10h1"></path>
+            <path d="M16 10h1"></path>
+            <path d="M8 13h1"></path>
+            <path d="M16 13h1"></path>
+        </symbol>
+
+        <!-- Ikon FAQ -->
+        <symbol id="icon-help" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.8 9a2.4 2.4 0 1 1 3.9 1.9c-1 .7-1.7 1.2-1.7 2.6"></path>
+            <path d="M12 17h.01"></path>
+        </symbol>
+
+        <!-- Ikon tiket bantuan -->
+        <symbol id="icon-ticket" viewBox="0 0 24 24">
+            <path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"></path>
+            <path d="M13 5v2"></path>
+            <path d="M13 11v2"></path>
+            <path d="M13 17v2"></path>
+        </symbol>
+
+        <!-- Ikon lokasi -->
+        <symbol id="icon-location" viewBox="0 0 24 24">
+            <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z"></path>
+            <circle cx="12" cy="10" r="2.5"></circle>
+        </symbol>
+
+        <!-- Ikon bintang -->
+        <symbol id="icon-sparkle" viewBox="0 0 24 24">
+            <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"></path>
+            <path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path>
+        </symbol>
+
+        <!-- Ikon pengguna -->
+        <symbol id="icon-user" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 21a8 8 0 0 1 16 0"></path>
+        </symbol>
+
+        <!-- Ikon centang -->
+        <symbol id="icon-check" viewBox="0 0 24 24">
+            <path d="m5 12 4 4L19 6"></path>
+        </symbol>
+
+        <!-- Ikon data -->
+        <symbol id="icon-database" viewBox="0 0 24 24">
+            <ellipse cx="12" cy="5" rx="8" ry="3"></ellipse>
+            <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path>
+            <path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path>
+        </symbol>
+
+        <!-- Ikon keamanan -->
+        <symbol id="icon-shield" viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+        </symbol>
+
+    </svg>
+
+
+    <!-- =========================================================
+         SKIP LINK
+         Membantu pengguna keyboard langsung menuju konten utama.
+         ========================================================= -->
+    <a class="skip-link" href="#main-content">
+        Langsung ke konten utama
+    </a>
+
+
+    <!-- =========================================================
+         HEADER DAN NAVIGATION BAR
+         Menu ini dapat diakses oleh pengguna tanpa login.
+         ========================================================= -->
+    <header class="site-header" id="site-header">
+
+        <div class="container header-container">
+
+            <!-- Logo dan nama website -->
+            <a href="/" class="brand" aria-label="Compass Campus Beranda">
+
+                <span class="brand-icon">
+                    <svg aria-hidden="true">
+                        <use href="#icon-compass"></use>
+                    </svg>
+                </span>
+
+                <span class="brand-text">
+                    <strong>Compass Campus</strong>
+                    <small>ComCam</small>
+                </span>
+
+            </a>
+
+
+            <!-- Tombol menu untuk tampilan mobile -->
+            <button
+                type="button"
+                class="mobile-menu-button"
+                id="mobile-menu-button"
+                aria-label="Buka menu navigasi"
+                aria-controls="primary-navigation"
+                aria-expanded="false"
+            >
+                <svg aria-hidden="true">
+                    <use href="#icon-menu"></use>
+                </svg>
+            </button>
+
+
+            <!-- Navigation menu utama -->
+            <nav
+                class="primary-navigation"
+                id="primary-navigation"
+                aria-label="Navigasi utama"
+            >
+                <a href="#beranda" class="nav-link active">
+                    Beranda
+                </a>
+
+                <a href="#program-studi" class="nav-link">
+                    Program Studi
+                </a>
+
+                <a href="#rekomendasi" class="nav-link">
+                    Rekomendasi
+                </a>
+
+                <a href="#faq" class="nav-link">
+                    FAQ
+                </a>
+
+                <!--
+                    Tiket Saya nantinya akan meminta pengguna login
+                    apabila pengguna belum memiliki sesi akun.
+                -->
+                <a href="/tiket-saya" class="nav-link">
+                    Tiket Saya
+                </a>
+            </nav>
+
+
+            <!-- Tombol pencarian dan login -->
+            <div class="header-actions">
+
+                <button
+                    type="button"
+                    class="icon-button search-button"
+                    id="open-search-button"
+                    aria-label="Buka pencarian"
+                >
+                    <svg aria-hidden="true">
+                        <use href="#icon-search"></use>
+                    </svg>
+                </button>
+
+                <a href="/login" class="button button-login">
+                    Masuk
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         KONTEN UTAMA
+         ========================================================= -->
+    <main id="main-content">
+
+
+        <!-- =====================================================
+             HERO SECTION / BAGIAN UTAMA BERANDA
+             ===================================================== -->
+        <section class="hero-section" id="beranda">
+
+            <div class="container hero-container">
+
+                <!-- Konten teks hero -->
+                <div class="hero-content reveal" data-animation="fade-right">
+
+                    <div class="hero-badge">
+                        <svg aria-hidden="true">
+                            <use href="#icon-sparkle"></use>
+                        </svg>
+
+                        <span>
+                            Platform panduan kampus dan program studi Indonesia
+                        </span>
+                    </div>
+
+                    <h1 class="hero-title">
+                        Temukan Kampus dan Program Studi Terbaik untuk
+                        <span>Masa Depanmu</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        Jelajahi informasi kampus di seluruh Indonesia,
+                        temukan program studi berdasarkan minatmu,
+                        bandingkan pilihan, dan dapatkan bantuan dalam
+                        satu platform yang mudah digunakan.
+                    </p>
+
+                    <div class="hero-buttons">
+
+                        <a
+                            href="#rekomendasi"
+                            class="button button-primary"
+                        >
+                            Mulai Pemetaan Minat
+
+                            <svg aria-hidden="true">
+                                <use href="#icon-arrow-right"></use>
+                            </svg>
+                        </a>
+
+                        <a
+                            href="#program-studi"
+                            class="button button-secondary"
+                        >
+                            Lihat Program Studi
+                        </a>
+
+                    </div>
+
+                    <!-- Keunggulan singkat platform -->
+                    <div class="hero-benefits">
+
+                        <div class="hero-benefit">
+                            <span class="check-icon">
+                                <svg aria-hidden="true">
+                                    <use href="#icon-check"></use>
+                                </svg>
+                            </span>
+
+                            <span>Informasi mudah dipahami</span>
+                        </div>
+
+                        <div class="hero-benefit">
+                            <span class="check-icon">
+                                <svg aria-hidden="true">
+                                    <use href="#icon-check"></use>
+                                </svg>
+                            </span>
+
+                            <span>Data dengan sumber yang transparan</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Ilustrasi hero -->
+                <div class="hero-visual reveal" data-animation="fade-left" aria-label="Ilustrasi calon mahasiswa">
+
+                    <!--
+                        Bagian ini nantinya dapat diberikan background image
+                        melalui file CSS.
+
+                        Contoh file gambar:
+                        static/bg/comcam-hero-students.png
+                    -->
+                    <div class="hero-illustration">
+
+                        <div class="student-illustration-placeholder">
+
+                            <svg aria-hidden="true">
+                                <use href="#icon-graduation"></use>
+                            </svg>
+
+                            <span>Compass Campus</span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Kartu dekorasi di sekitar ilustrasi -->
+                    <div class="floating-card floating-card-chat">
+
+                        <svg aria-hidden="true">
+                            <use href="#icon-help"></use>
+                        </svg>
+
+                        <span>Bantuan</span>
+
+                    </div>
+
+                    <div class="floating-card floating-card-campus">
+
+                        <svg aria-hidden="true">
+                            <use href="#icon-graduation"></use>
+                        </svg>
+
+                        <span>Kampus</span>
+
+                    </div>
+
+                    <div class="floating-card floating-card-search">
+
+                        <svg aria-hidden="true">
+                            <use href="#icon-search"></use>
+                        </svg>
+
+                        <span>Cari</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             LAYANAN UTAMA COMCAM
+             ===================================================== -->
+        <section class="services-section reveal" data-animation="fade-up" aria-labelledby="services-title">
+
+            <div class="container">
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-label">Layanan ComCam</span>
+
+                        <h2 id="services-title">
+                            Semua kebutuhan pencarian kampus dalam satu tempat
+                        </h2>
+                    </div>
+
+                    <p>
+                        Mulai dari mengenali minat, mencari program studi,
+                        mendapatkan informasi, hingga menghubungi pusat bantuan.
+                    </p>
+
+                </div>
+
+
+                <div class="services-grid">
+
+                    <!-- Layanan pemetaan minat -->
+                    <article class="service-card">
+
+                        <div class="service-icon interest-icon">
+                            <svg aria-hidden="true">
+                                <use href="#icon-interest"></use>
+                            </svg>
+                        </div>
+
+                        <h3>Pemetaan Minat</h3>
+
+                        <p>
+                            Kenali bidang dan program studi yang sesuai
+                            dengan minat, aktivitas favorit, dan tujuan kariermu.
+                        </p>
+
+                        <a href="#rekomendasi" class="card-link">
+                            Mulai Pemetaan
+
+                            <svg aria-hidden="true">
+                                <use href="#icon-arrow-right"></use>
+                            </svg>
+                        </a>
+
+                    </article>
+
+
+                    <!-- Layanan informasi kampus -->
+                    <article class="service-card">
+
+                        <div class="service-icon campus-icon">
+                            <svg aria-hidden="true">
+                                <use href="#icon-building"></use>
+                            </svg>
+                        </div>
+
+                        <h3>Info Kampus dan Prodi</h3>
+
+                        <p>
+                            Jelajahi informasi kampus, program studi,
+                            lokasi, jenjang, sistem perkuliahan, dan fasilitas.
+                        </p>
+
+                        <a href="#program-studi" class="card-link">
+                            Mulai Menjelajah
+
+                            <svg aria-hidden="true">
+                                <use href="#icon-arrow-right"></use>
+                            </svg>
+                        </a>
+
+                    </article>
+
+
+                    <!-- Layanan FAQ -->
+                    <article class="service-card">
+
+                        <div class="service-icon faq-icon">
+                            <svg aria-hidden="true">
+                                <use href="#icon-help"></use>
+                            </svg>
+                        </div>
+
+                        <h3>FAQ Interaktif</h3>
+
+                        <p>
+                            Temukan jawaban mengenai pemilihan jurusan,
+                            kampus, biaya, beasiswa, dan proses pendaftaran.
+                        </p>
+
+                        <a href="#faq" class="card-link">
+                            Lihat Pertanyaan
+
+                            <svg aria-hidden="true">
+                                <use href="#icon-arrow-right"></use>
+                            </svg>
+                        </a>
+
+                    </article>
+
+
+                    <!-- Layanan ticketing -->
+                    <article class="service-card">
+
+                        <div class="service-icon ticket-icon">
+                            <svg aria-hidden="true">
+                                <use href="#icon-ticket"></use>
+                            </svg>
+                        </div>
+
+                        <h3>Buat Tiket Bantuan</h3>
+
+                        <p>
+                            Belum menemukan jawaban? Kirim pertanyaan
+                            atau laporkan masalah kepada tim bantuan ComCam.
+                        </p>
+
+                        <a href="/buat-tiket" class="card-link">
+                            Buat Tiket
+
+                            <svg aria-hidden="true">
+                                <use href="#icon-arrow-right"></use>
+                            </svg>
+                        </a>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             INFORMASI KEUNGGULAN
+             Tidak menggunakan angka palsu sebelum data tersedia.
+             ===================================================== -->
+        <section class="platform-info-section reveal" data-animation="fade-up">
+
+            <div class="container platform-info-grid">
+
+                <article class="platform-info-item">
+
+                    <svg aria-hidden="true">
+                        <use href="#icon-building"></use>
+                    </svg>
+
+                    <div>
+                        <strong>Jangkauan Nasional</strong>
+                        <span>Informasi kampus dari berbagai wilayah Indonesia</span>
+                    </div>
+
+                </article>
+
+
+                <article class="platform-info-item">
+
+                    <svg aria-hidden="true">
+                        <use href="#icon-graduation"></use>
+                    </svg>
+
+                    <div>
+                        <strong>Beragam Bidang Studi</strong>
+                        <span>Jelajahi pilihan pendidikan dari berbagai kategori</span>
+                    </div>
+
+                </article>
+
+
+                <article class="platform-info-item">
+
+                    <svg aria-hidden="true">
+                        <use href="#icon-database"></use>
+                    </svg>
+
+                    <div>
+                        <strong>Sumber Transparan</strong>
+                        <span>Informasi menampilkan status dan pembaruan data</span>
+                    </div>
+
+                </article>
+
+
+                <article class="platform-info-item">
+
+                    <svg aria-hidden="true">
+                        <use href="#icon-shield"></use>
+                    </svg>
+
+                    <div>
+                        <strong>Bantuan Terintegrasi</strong>
+                        <span>FAQ dan sistem tiket tersedia dalam satu platform</span>
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             FITUR PENCARIAN KAMPUS DAN PROGRAM STUDI
+             ===================================================== -->
+        <section
+            class="search-campus-section"
+            id="program-studi"
+            aria-labelledby="search-campus-title"
+        >
+
+            <div class="container">
+
+                <div class="search-campus-wrapper">
+
+                    <div class="search-campus-content">
+
+                        <span class="section-label">
+                            Jelajahi Indonesia
+                        </span>
+
+                        <h2 id="search-campus-title">
+                            Cari kampus dan program studi sesuai kebutuhanmu
+                        </h2>
+
+                        <p>
+                            Gunakan kata kunci dan filter untuk menemukan
+                            kampus berdasarkan nama, lokasi, program studi,
+                            jenjang, atau bidang keilmuan.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Form pencarian utama -->
+                    <form
+                        class="main-search-form"
+                        action="/pencarian"
+                        method="GET"
+                        role="search"
+                    >
+
+                        <div class="search-input-wrapper">
+
+                            <svg aria-hidden="true">
+                                <use href="#icon-search"></use>
+                            </svg>
+
+                            <label for="main-search-input" class="sr-only">
+                                Cari kampus atau program studi
+                            </label>
+
+                            <input
+                                type="search"
+                                id="main-search-input"
+                                name="q"
+                                placeholder="Cari kampus, program studi, kota, atau bidang ilmu..."
+                                autocomplete="off"
+                                required
+                            >
+
+                        </div>
+
+                        <button type="submit" class="button button-primary">
+                            Cari Sekarang
+                        </button>
+
+                    </form>
+
+
+                    <!-- Contoh pencarian populer -->
+                    <div class="popular-searches">
+
+                        <span>Pencarian populer:</span>
+
+                        <a href="/pencarian?q=Teknik+Informatika">
+                            Teknik Informatika
+                        </a>
+
+                        <a href="/pencarian?q=Sistem+Informasi">
+                            Sistem Informasi
+                        </a>
+
+                        <a href="/pencarian?q=Manajemen">
+                            Manajemen
+                        </a>
+
+                        <a href="/pencarian?q=Desain+Komunikasi+Visual">
+                            Desain Komunikasi Visual
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             KATEGORI PROGRAM STUDI
+             ===================================================== -->
+        <section
+            class="study-category-section"
+            aria-labelledby="study-category-title"
+        >
+
+            <div class="container">
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-label">Kategori Pilihan</span>
+
+                        <h2 id="study-category-title">
+                            Jelajahi berdasarkan bidang keilmuan
+                        </h2>
+                    </div>
+
+                    <a href="/program-studi" class="view-all-link">
+                        Lihat Semua Program Studi
+
+                        <svg aria-hidden="true">
+                            <use href="#icon-arrow-right"></use>
+                        </svg>
+                    </a>
+
+                </div>
+
+
+                <div class="study-category-grid">
+
+                    <a
+                        href="/program-studi?bidang=teknologi"
+                        class="study-category-card"
+                    >
+                        <div class="category-icon">💻</div>
+
+                        <div>
+                            <h3>Komputer dan Teknologi</h3>
+                            <p>
+                                Informatika, Sistem Informasi, Ilmu Komputer,
+                                Teknologi Informasi, dan lainnya.
+                            </p>
+                        </div>
+                    </a>
+
+
+                    <a
+                        href="/program-studi?bidang=bisnis"
+                        class="study-category-card"
+                    >
+                        <div class="category-icon">📊</div>
+
+                        <div>
+                            <h3>Ekonomi dan Bisnis</h3>
+                            <p>
+                                Manajemen, Akuntansi, Bisnis Digital,
+                                Ekonomi, dan Kewirausahaan.
+                            </p>
+                        </div>
+                    </a>
+
+
+                    <a
+                        href="/program-studi?bidang=kesehatan"
+                        class="study-category-card"
+                    >
+                        <div class="category-icon">🩺</div>
+
+                        <div>
+                            <h3>Kesehatan</h3>
+                            <p>
+                                Kedokteran, Keperawatan, Farmasi,
+                                Kesehatan Masyarakat, dan Gizi.
+                            </p>
+                        </div>
+                    </a>
+
+
+                    <a
+                        href="/program-studi?bidang=teknik"
+                        class="study-category-card"
+                    >
+                        <div class="category-icon">⚙️</div>
+
+                        <div>
+                            <h3>Teknik dan Rekayasa</h3>
+                            <p>
+                                Teknik Sipil, Elektro, Mesin, Industri,
+                                Arsitektur, dan bidang rekayasa lainnya.
+                            </p>
+                        </div>
+                    </a>
+
+
+                    <a
+                        href="/program-studi?bidang=sosial"
+                        class="study-category-card"
+                    >
+                        <div class="category-icon">🤝</div>
+
+                        <div>
+                            <h3>Sosial dan Komunikasi</h3>
+                            <p>
+                                Ilmu Komunikasi, Hubungan Internasional,
+                                Sosiologi, dan Administrasi Publik.
+                            </p>
+                        </div>
+                    </a>
+
+
+                    <a
+                        href="/program-studi?bidang=seni"
+                        class="study-category-card"
+                    >
+                        <div class="category-icon">🎨</div>
+
+                        <div>
+                            <h3>Desain dan Seni</h3>
+                            <p>
+                                Desain Komunikasi Visual, Desain Produk,
+                                Seni Rupa, Film, dan Animasi.
+                            </p>
+                        </div>
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             PEMETAAN MINAT DAN REKOMENDASI
+             ===================================================== -->
+        <section
+            class="recommendation-section"
+            id="rekomendasi"
+            aria-labelledby="recommendation-title"
+        >
+
+            <div class="container recommendation-container">
+
+                <div class="recommendation-content">
+
+                    <span class="section-label section-label-light">
+                        Rekomendasi Personal
+                    </span>
+
+                    <h2 id="recommendation-title">
+                        Masih bingung menentukan pilihan?
+                    </h2>
+
+                    <p>
+                        Jawab beberapa pertanyaan sederhana mengenai
+                        aktivitas favorit, mata pelajaran, gaya kerja,
+                        dan tujuan kariermu.
+                    </p>
+
+                    <ul class="recommendation-list">
+
+                        <li>
+                            <svg aria-hidden="true">
+                                <use href="#icon-check"></use>
+                            </svg>
+
+                            Pertanyaan sederhana dan mudah dipahami
+                        </li>
+
+                        <li>
+                            <svg aria-hidden="true">
+                                <use href="#icon-check"></use>
+                            </svg>
+
+                            Menampilkan beberapa pilihan program studi
+                        </li>
+
+                        <li>
+                            <svg aria-hidden="true">
+                                <use href="#icon-check"></use>
+                            </svg>
+
+                            Memberikan alasan kecocokan setiap rekomendasi
+                        </li>
+
+                    </ul>
+
+                    <a href="/pemetaan-minat" class="button button-light">
+                        Mulai Pemetaan Minat
+
+                        <svg aria-hidden="true">
+                            <use href="#icon-arrow-right"></use>
+                        </svg>
+                    </a>
+
+                </div>
+
+
+                <!-- Contoh kartu hasil rekomendasi -->
+                <div class="recommendation-preview">
+
+                    <div class="preview-header">
+
+                        <div>
+                            <span>Contoh hasil rekomendasi</span>
+                            <h3>Program Studi Untukmu</h3>
+                        </div>
+
+                        <span class="preview-status">Preview</span>
+
+                    </div>
+
+
+                    <article class="recommendation-item">
+
+                        <div class="recommendation-rank">
+                            1
+                        </div>
+
+                        <div class="recommendation-info">
+                            <h4>Sistem Informasi</h4>
+                            <p>Teknologi, bisnis, dan analisis sistem</p>
+                        </div>
+
+                        <div class="match-score">
+                            <strong>92%</strong>
+                            <span>Kecocokan</span>
+                        </div>
+
+                    </article>
+
+
+                    <article class="recommendation-item">
+
+                        <div class="recommendation-rank">
+                            2
+                        </div>
+
+                        <div class="recommendation-info">
+                            <h4>Teknik Informatika</h4>
+                            <p>Pemrograman dan pengembangan teknologi</p>
+                        </div>
+
+                        <div class="match-score">
+                            <strong>86%</strong>
+                            <span>Kecocokan</span>
+                        </div>
+
+                    </article>
+
+
+                    <article class="recommendation-item">
+
+                        <div class="recommendation-rank">
+                            3
+                        </div>
+
+                        <div class="recommendation-info">
+                            <h4>Bisnis Digital</h4>
+                            <p>Bisnis, inovasi, dan teknologi digital</p>
+                        </div>
+
+                        <div class="match-score">
+                            <strong>79%</strong>
+                            <span>Kecocokan</span>
+                        </div>
+
+                    </article>
+
+
+                    <p class="recommendation-disclaimer">
+                        Skor pada bagian ini hanya contoh tampilan.
+                        Hasil sebenarnya akan dihitung berdasarkan jawaban pengguna.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             CARA KERJA COMCAM
+             ===================================================== -->
+        <section class="steps-section" aria-labelledby="steps-title">
+
+            <div class="container">
+
+                <div class="center-section-heading">
+
+                    <span class="section-label">Cara Kerja</span>
+
+                    <h2 id="steps-title">
+                        Temukan arah pendidikanmu dalam tiga langkah
+                    </h2>
+
+                    <p>
+                        ComCam dirancang agar pengguna awal dapat
+                        menemukan informasi tanpa proses yang rumit.
+                    </p>
+
+                </div>
+
+
+                <div class="steps-grid">
+
+                    <article class="step-card">
+
+                        <span class="step-number">01</span>
+
+                        <div class="step-icon">
+                            <svg aria-hidden="true">
+                                <use href="#icon-interest"></use>
+                            </svg>
+                        </div>
+
+                        <h3>Kenali Minatmu</h3>
+
+                        <p>
+                            Isi pemetaan minat atau langsung cari bidang
+                            pendidikan yang ingin kamu pelajari.
+                        </p>
+
+                    </article>
+
+
+                    <article class="step-card">
+
+                        <span class="step-number">02</span>
+
+                        <div class="step-icon">
+                            <svg aria-hidden="true">
+                                <use href="#icon-search"></use>
+                            </svg>
+                        </div>
+
+                        <h3>Jelajahi Pilihan</h3>
+
+                        <p>
+                            Pelajari kampus, program studi, lokasi,
+                            fasilitas, dan informasi penting lainnya.
+                        </p>
+
+                    </article>
+
+
+                    <article class="step-card">
+
+                        <span class="step-number">03</span>
+
+                        <div class="step-icon">
+                            <svg aria-hidden="true">
+                                <use href="#icon-graduation"></use>
+                            </svg>
+                        </div>
+
+                        <h3>Tentukan Arahmu</h3>
+
+                        <p>
+                            Simpan, bandingkan, dan pertimbangkan pilihan
+                            sebelum membuka website resmi kampus.
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             FAQ SINGKAT
+             Elemen details dapat dibuka tanpa JavaScript.
+             ===================================================== -->
+        <section class="faq-section" id="faq" aria-labelledby="faq-title">
+
+            <div class="container faq-container">
+
+                <div class="faq-introduction">
+
+                    <span class="section-label">Pertanyaan Umum</span>
+
+                    <h2 id="faq-title">
+                        Informasi yang sering ditanyakan
+                    </h2>
+
+                    <p>
+                        Temukan jawaban cepat mengenai penggunaan
+                        ComCam, sumber data, rekomendasi, dan tiket bantuan.
+                    </p>
+
+                    <a href="/faq" class="button button-secondary">
+                        Lihat Semua FAQ
+                    </a>
+
+                </div>
+
+
+                <div class="faq-list">
+
+                    <details class="faq-item">
+
+                        <summary>
+                            Apakah ComCam dapat digunakan tanpa login?
+                        </summary>
+
+                        <p>
+                            Ya. Pengguna dapat mencari kampus, melihat program
+                            studi, membaca FAQ, dan mencoba pemetaan minat
+                            tanpa harus masuk ke akun.
+                        </p>
+
+                    </details>
+
+
+                    <details class="faq-item">
+
+                        <summary>
+                            Kapan pengguna diwajibkan login?
+                        </summary>
+
+                        <p>
+                            Login diperlukan saat pengguna ingin menyimpan
+                            rekomendasi, membuat tiket bantuan, melihat riwayat
+                            tiket, atau mengatur profil pribadi.
+                        </p>
+
+                    </details>
+
+
+                    <details class="faq-item">
+
+                        <summary>
+                            Apakah rekomendasi ComCam menentukan pilihan final?
+                        </summary>
+
+                        <p>
+                            Tidak. Rekomendasi hanya menjadi alat eksplorasi awal.
+                            Pengguna tetap perlu mempertimbangkan kemampuan,
+                            biaya, lokasi, dan informasi resmi dari kampus.
+                        </p>
+
+                    </details>
+
+
+                    <details class="faq-item">
+
+                        <summary>
+                            Dari mana informasi kampus diperoleh?
+                        </summary>
+
+                        <p>
+                            Informasi dapat berasal dari database ComCam,
+                            sumber resmi pemerintah, website resmi kampus,
+                            atau integrasi API resmi yang tersedia dan diizinkan.
+                        </p>
+
+                    </details>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             CALL TO ACTION HELP DESK
+             ===================================================== -->
+        <section class="help-cta-section">
+
+            <div class="container help-cta-container">
+
+                <div class="help-cta-icon">
+                    <svg aria-hidden="true">
+                        <use href="#icon-ticket"></use>
+                    </svg>
+                </div>
+
+                <div class="help-cta-content">
+                    <h2>Belum menemukan informasi yang kamu butuhkan?</h2>
+
+                    <p>
+                        Kirim pertanyaan atau kendalamu kepada tim
+                        bantuan Compass Campus melalui sistem tiket.
+                    </p>
+                </div>
+
+                <a href="/buat-tiket" class="button button-light">
+                    Buat Tiket Bantuan
+
+                    <svg aria-hidden="true">
+                        <use href="#icon-arrow-right"></use>
+                    </svg>
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
+    <footer class="site-footer">
+
+        <div class="container footer-grid">
+
+            <!-- Informasi brand -->
+            <div class="footer-brand-column">
+
+                <a href="/" class="brand footer-brand">
+
+                    <span class="brand-icon">
+                        <svg aria-hidden="true">
+                            <use href="#icon-compass"></use>
+                        </svg>
+                    </span>
+
+                    <span class="brand-text">
+                        <strong>Compass Campus</strong>
+                        <small>ComCam</small>
+                    </span>
+
+                </a>
+
+                <p>
+                    Platform informasi dan bantuan pendidikan tinggi
+                    untuk membantu masyarakat Indonesia menemukan
+                    kampus dan program studi yang tepat.
+                </p>
+
+            </div>
+
+
+            <!-- Menu jelajahi -->
+            <div class="footer-column">
+
+                <h2>Jelajahi</h2>
+
+                <a href="/kampus">Cari Kampus</a>
+                <a href="/program-studi">Program Studi</a>
+                <a href="/pemetaan-minat">Pemetaan Minat</a>
+                <a href="/perbandingan">Bandingkan Pilihan</a>
+
+            </div>
+
+
+            <!-- Menu bantuan -->
+            <div class="footer-column">
+
+                <h2>Bantuan</h2>
+
+                <a href="/faq">FAQ</a>
+                <a href="/buat-tiket">Buat Tiket</a>
+                <a href="/tiket-saya">Tiket Saya</a>
+                <a href="/laporkan-data">Laporkan Kesalahan Data</a>
+
+            </div>
+
+
+            <!-- Menu perusahaan -->
+            <div class="footer-column">
+
+                <h2>Compass Campus</h2>
+
+                <a href="/tentang">Tentang ComCam</a>
+                <a href="/sumber-data">Sumber Data</a>
+                <a href="/kontak">Hubungi Kami</a>
+                <a href="/kerja-sama">Kerja Sama</a>
+
+            </div>
+
+
+            <!-- Menu kebijakan -->
+            <div class="footer-column">
+
+                <h2>Kebijakan</h2>
+
+                <a href="/privasi">Kebijakan Privasi</a>
+                <a href="/syarat-ketentuan">Syarat dan Ketentuan</a>
+                <a href="/aksesibilitas">Aksesibilitas</a>
+                <a href="/disclaimer">Disclaimer</a>
+
+            </div>
+
+        </div>
+
+
+        <div class="container footer-bottom">
+
+            <p>
+                &copy; <span id="current-year">2026</span>
+                Compass Campus — ComCam. Seluruh hak cipta dilindungi.
+            </p>
+
+            <p>
+                Informasi pada ComCam tidak menggantikan informasi resmi
+                dari masing-masing institusi pendidikan.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- =========================================================
+         PANEL PENCARIAN GLOBAL
+         Secara default akan disembunyikan melalui CSS.
+         Dibuka menggunakan JavaScript pada tahap berikutnya.
+         ========================================================= -->
+    <div
+        class="global-search-overlay"
+        id="global-search-overlay"
+        aria-hidden="true"
+    >
+
+        <div
+            class="global-search-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="global-search-title"
+        >
+
+            <div class="global-search-header">
+
+                <div>
+                    <span class="section-label">Pencarian ComCam</span>
+
+                    <h2 id="global-search-title">
+                        Apa yang ingin kamu cari?
+                    </h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="close-search-button"
+                    id="close-search-button"
+                    aria-label="Tutup pencarian"
+                >
+                    &times;
+                </button>
+
+            </div>
+
+
+            <form
+                class="global-search-form"
+                action="/pencarian"
+                method="GET"
+                role="search"
+            >
+
+                <svg aria-hidden="true">
+                    <use href="#icon-search"></use>
+                </svg>
+
+                <label for="global-search-input" class="sr-only">
+                    Pencarian global
+                </label>
+
+                <input
+                    type="search"
+                    id="global-search-input"
+                    name="q"
+                    placeholder="Cari kampus, program studi, lokasi, atau pertanyaan..."
+                    autocomplete="off"
+                >
+
+                <button type="submit" class="button button-primary">
+                    Cari
+                </button>
+
+            </form>
+
+
+            <div class="search-suggestions">
+
+                <p>Contoh pencarian:</p>
+
+                <div class="suggestion-list">
+                    <button type="button">Kampus di Jakarta</button>
+                    <button type="button">Teknik Informatika</button>
+                    <button type="button">Program studi bidang kesehatan</button>
+                    <button type="button">Kampus dengan kelas karyawan</button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Pesan apabila JavaScript dimatikan -->
+    <noscript>
+        <div class="noscript-message">
+            Beberapa fitur interaktif ComCam membutuhkan JavaScript.
+            Aktifkan JavaScript pada browser untuk pengalaman terbaik.
+        </div>
+    </noscript>
+
+
+    <!--
+        File JavaScript akan dibuat setelah CSS selesai.
+        Lokasi file:
+        static/js/script.js
+    -->
+    <script
+        src="../static/js/script.js"
+        defer
+    ></script>
+
+</body>
+</html>
