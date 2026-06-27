@@ -24,11 +24,11 @@
 
     <title>Compass Campus | Temukan Arah Masa Depanmu</title>
 
-    <!--
-        File CSS akan dibuat pada tahap berikutnya.
-        Lokasi file:
-        static/css/style.css
+    <!-- Setelah Flask aktif, gunakan:
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/index.css') }}">
     -->
+
     <link
         rel="stylesheet"
         href="../static/css/index.css"
@@ -247,7 +247,7 @@
                     </svg>
                 </button>
 
-                <a href="/login" class="button button-login">
+                <a href="login.html" class="button button-login">
                     Masuk
                 </a>
 
@@ -1417,25 +1417,15 @@
 
     </div>
 
-
-    <!-- Pesan apabila JavaScript dimatikan -->
-    <noscript>
-        <div class="noscript-message">
-            Beberapa fitur interaktif ComCam membutuhkan JavaScript.
-            Aktifkan JavaScript pada browser untuk pengalaman terbaik.
-        </div>
-    </noscript>
-
-
-    <!--
-        File JavaScript akan dibuat setelah CSS selesai.
-        Lokasi file:
-        static/js/script.js
-    -->
     <script
-        src="../static/js/script.js"
+        src="../static/js/index.js"
         defer
     ></script>
+
+    <!-- Setelah Flask aktif:
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='js/index.js') }}">
+    -->
 
 </body>
 </html>
