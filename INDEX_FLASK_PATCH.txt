@@ -1,0 +1,23 @@
+INDEX.HTML — PERUBAHAN UNTUK FLASK
+
+1. CSS:
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/index.css') }}"
+>
+
+2. Tombol Masuk:
+<a
+    href="{{ url_for('auth.login') }}"
+    class="button button-login"
+>
+    Masuk
+</a>
+
+3. JavaScript sebelum </body>:
+<script
+    src="{{ url_for('static', filename='js/index.js') }}"
+    defer
+></script>
+
+Hapus pemanggilan CSS/JS relatif lama agar file tidak dimuat dua kali.

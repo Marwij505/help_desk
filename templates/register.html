@@ -4,24 +4,23 @@
     <!-- Informasi dasar halaman -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <meta
         name="description"
         content="Buat akun Compass Campus untuk menyimpan kampus, rekomendasi, dan tiket bantuan."
     >
+
     <title>Daftar | Compass Campus</title>
 
-    <!-- Untuk Live Server -->
-    <link rel="stylesheet" href="../static/css/register.css">
-
-    <!-- Setelah Flask aktif:
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/register.css') }}">
-    -->
+    <!-- Setelah Flask aktif: -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/register.css') }}"
+    >
 </head>
 
 <body class="auth-page register-page">
 
-    <!-- Kumpulan ikon SVG -->
     <svg class="svg-sprite" aria-hidden="true">
         <symbol id="icon-compass" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="9"></circle>
@@ -76,21 +75,23 @@
     </a>
 
     <main class="auth-layout">
-
-        <!-- Bagian kiri: form register -->
         <section class="auth-content" aria-labelledby="register-title">
 
-            <a href="login.html" class="back-link">
+            <a
+                href="{{ url_for('auth.login') }}"
+                class="back-link"
+            >
                 <svg aria-hidden="true">
                     <use href="#icon-arrow-left"></use>
                 </svg>
                 <span>Kembali ke Login</span>
             </a>
 
-            <a href="index.html"
-               class="auth-brand"
-               aria-label="Compass Campus Beranda">
-
+            <a
+                href="{{ url_for('index') }}"
+                class="auth-brand"
+                aria-label="Compass Campus Beranda"
+            >
                 <span class="auth-brand-icon">
                     <svg aria-hidden="true">
                         <use href="#icon-compass"></use>
@@ -106,6 +107,7 @@
             <header class="auth-heading">
                 <span class="auth-label">Akun Baru</span>
                 <h1 id="register-title">Buat akun ComCam</h1>
+
                 <p>
                     Simpan pilihan kampus, hasil rekomendasi,
                     dan tiket bantuan dalam satu akun.
@@ -113,23 +115,36 @@
             </header>
 
             <div class="auth-card register-card">
-
-                <!-- Form dikirim langsung ke Flask/Python -->
                 <form
                     id="register-form"
                     class="auth-form register-form"
-                    action="/register"
+                    action="{{ url_for('auth.register') }}"
                     method="POST"
                     novalidate
                 >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
 
-                    <!-- Pesan dari Flask dapat ditampilkan di sini.
                     {% if error %}
-                    <div class="form-alert form-alert-error" role="alert">
+                    <div
+                        class="form-alert form-alert-error"
+                        role="alert"
+                    >
                         {{ error }}
                     </div>
                     {% endif %}
-                    -->
+
+                    {% if success %}
+                    <div
+                        class="form-alert form-alert-success"
+                        role="status"
+                    >
+                        {{ success }}
+                    </div>
+                    {% endif %}
 
                     <div class="form-group">
                         <label for="full-name">Nama Lengkap</label>
@@ -143,6 +158,7 @@
                                 type="text"
                                 id="full-name"
                                 name="full_name"
+                                value="{{ (form_data|default({})).get('full_name', '') }}"
                                 placeholder="Masukkan nama lengkap"
                                 autocomplete="name"
                                 minlength="3"
@@ -164,6 +180,7 @@
                                 type="email"
                                 id="email"
                                 name="email"
+                                value="{{ (form_data|default({})).get('email', '') }}"
                                 placeholder="Masukkan email aktif"
                                 autocomplete="email"
                                 inputmode="email"
@@ -250,7 +267,7 @@
                             type="checkbox"
                             id="agreement"
                             name="agreement"
-                            value="accepted"
+                            value="on"
                             required
                         >
 
@@ -264,8 +281,12 @@
                         </span>
                     </label>
 
-                    <button type="submit" class="auth-submit-button">
+                    <button
+                        type="submit"
+                        class="auth-submit-button"
+                    >
                         <span>Daftar Sekarang</span>
+
                         <svg aria-hidden="true">
                             <use href="#icon-arrow-right"></use>
                         </svg>
@@ -274,16 +295,18 @@
 
                 <p class="auth-switch-text">
                     Sudah memiliki akun?
-                    <a href="login.html">Masuk di sini</a>
+                    <a href="{{ url_for('auth.login') }}">
+                        Masuk di sini
+                    </a>
                 </p>
             </div>
 
             <p class="auth-security-note">
-                Semangat kuliahnya! Pastikan kata sandi yang kamu buat aman dan unik.
+                Semangat kuliahnya! Pastikan kata sandi
+                yang kamu buat aman dan unik.
             </p>
         </section>
 
-        <!-- Bagian kanan: ilustrasi -->
         <aside
             class="auth-visual"
             aria-label="Ilustrasi mahasiswa Compass Campus"
@@ -310,7 +333,7 @@
 
             <div class="auth-student-illustration">
                 <img
-                    src="../static/bg/comcam-hero-students.png"
+                    src="{{ url_for('static', filename='bg/comcam-hero-students.png') }}"
                     alt="Dua calon mahasiswa Compass Campus"
                 >
             </div>
@@ -355,14 +378,11 @@
         </aside>
     </main>
 
-    <script src="../static/js/register.js"defer></script>
-    
-    <!-- Setelah Flask aktif:
+    <!-- Setelah Flask aktif: -->
     <script
         src="{{ url_for('static', filename='js/register.js') }}"
         defer
     ></script>
-    -->
-    
+
 </body>
 </html>

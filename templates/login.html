@@ -18,15 +18,12 @@
 
     <title>Masuk | Compass Campus</title>
 
-    <!--
-        Setelah menggunakan Flask, ubah menjadi:
-        {{ url_for('static', filename='css/auth.css') }}
-    -->
-        
+    <!-- Setelah Flask aktif: -->
     <link
         rel="stylesheet"
-        href="../static/css/login.css"
+        href="{{ url_for('static', filename='css/login.css') }}"
     >
+    
 </head>
 
 <body class="auth-page">
@@ -129,7 +126,7 @@
         >
 
             <!-- Navigasi kembali ke beranda -->
-            <a href="index.html" class="back-link">
+            <a href="{{ url_for('index') }}" class="back-link">
 
                 <svg aria-hidden="true">
                     <use href="#icon-arrow-left"></use>
@@ -142,7 +139,7 @@
 
             <!-- Logo Compass Campus -->
             <a
-                href="index.html"
+                href="{{ url_for('index') }}"
                 class="auth-brand"
                 aria-label="Compass Campus Beranda"
             >
@@ -200,20 +197,34 @@
                 <form
                     id="login-form"
                     class="auth-form"
-                    action="/login"
+                    action="{{ url_for('auth.login') }}"
                     method="POST"
                     novalidate
                 >
 
-                    <!-- Pesan error dari Flask nantinya dapat ditempatkan di sini -->
-                    <!--
-                    {% if error %}
-                        <div class="form-alert form-alert-error" role="alert">
-                            {{ error }}
-                        </div>
-                    {% endif %}
-                    -->
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
 
+                    {% if error %}
+                    <div
+                        class="form-alert form-alert-error"
+                        role="alert"
+                    >
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    {% if success %}
+                    <div
+                        class="form-alert form-alert-success"
+                        role="status"
+                    >
+                        {{ success }}
+                    </div>
+                    {% endif %}
 
                     <!-- Input email -->
                     <div class="form-group">
@@ -235,9 +246,11 @@
                                 type="email"
                                 id="email"
                                 name="email"
+                                value="{{ (form_data|default({})).get('email', '') }}"
                                 placeholder="Masukkan email yang terdaftar"
                                 autocomplete="email"
                                 inputmode="email"
+                                maxlength="150"
                                 required
                             >
 
@@ -272,6 +285,7 @@
                                 name="password"
                                 placeholder="Masukkan kata sandi"
                                 autocomplete="current-password"
+                                maxlength="100"
                                 minlength="8"
                                 required
                             >
@@ -318,7 +332,7 @@
                         </label>
 
                         <a
-                            href="forgot-password.html"
+                            href="{{ url_for('auth.forgot_password') }}"
                             class="forgot-password-link"
                         >
                             Lupa kata sandi?
@@ -395,7 +409,7 @@
 
                     Belum memiliki akun?
 
-                    <a href="register.html">
+                    <a href="{{ url_for('auth.register') }}">
                         Daftar sekarang
                     </a>
 
@@ -457,7 +471,7 @@
             <div class="auth-student-illustration">
 
                 <img
-                    src="../static/bg/comcam-hero-students.png"
+                    src="{{ url_for('static', filename='bg/comcam-hero-students.png') }}"
                     alt="Dua calon mahasiswa Compass Campus"
                 >
 
@@ -521,17 +535,11 @@
 
     </main>
 
-    <script
-        src="../static/js/login.js"
-        defer
-    ></script>
-    
-    <!-- Setelah Flask aktif:
+    <!-- Setelah Flask aktif: -->
     <script
         src="{{ url_for('static', filename='js/login.js') }}"
         defer
     ></script>
-    -->
 
 </body>
 </html>

@@ -1,0 +1,11 @@
+Flask
+mysql-connector-python
+python-dotenv
+Flask-Login
+Flask-WTF
+email-validator
+requests
+openai
+Flask-Limiter
+Flask-Caching
+waitress
