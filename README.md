@@ -20,39 +20,41 @@ Status proyek: Dalam tahap pengembangan (MASIH LAMA DAN RIBET tapi cocok untuk p
 5.gunakan semua code dari folder database dan masukan ke dalam database kalian masing-masing
 
 6.buka terminal lalu jalankan ini masing-masing
-  -python -m pip install --upgrade pip setuptools wheel
 
-  -python -m pip install Flask mysql-connector-python python-dotenv Flask-Login Flask-WTF email-validator requests openai Flask-Limiter     Flask-Caching waitress
+    -python -m pip install --upgrade pip setuptools wheel
 
-  -validasi 1 = python -m pip install -r .\help_desk\requirements.txt
+    -python -m pip install Flask mysql-connector-python python-dotenv Flask-Login Flask-WTF email-validator requests openai Flask-Limiter     Flask-Caching waitress
 
-  -validasi 2 = python -c "import flask; import mysql.connector; import dotenv; import flask_login; import flask_wtf; import email_validator; import requests; import openai; import flask_limiter; import flask_caching; import waitress; print('Semua library ComCam berhasil dimuat')"
+    -validasi 1 = python -m pip install -r .\help_desk\requirements.txt
 
-  -validasi 3 (cek sendiri) = python -m pip list
+    -validasi 2 = python -c "import flask; import mysql.connector; import dotenv; import flask_login; import flask_wtf; import email_validator; import requests; import openai; import flask_limiter; import flask_caching; import waitress; print('Semua library ComCam berhasil dimuat')"
+
+    -validasi 3 (cek sendiri) = python -m pip list
 
 7.test library dan code
-  -python -c "import secrets; print(secrets.token_hex(32))" -> gunakan hasilnya dan ubah didalam .env di bagian "FLASK_SECRET_KEY"
 
-  -cd C:\Users\Marcell\Repositories\help_desk / cd help_desk
-    -python -c "from config import Config, validate_configuration; validate_configuration(); print(Config.DB_NAME, Config.DB_HOST, Config.DB_PORT)"
-      -hasilnya nanti = help_desk_comcam 127.0.0.1 3306
+    -python -c "import secrets; print(secrets.token_hex(32))" -> gunakan hasilnya dan ubah didalam .env di bagian "FLASK_SECRET_KEY"
 
-    -python -c "import mysql.connector; from config import Config; db = mysql.connector.connect(host=Config.DB_HOST, port=Config.DB_PORT, user=Config.DB_USER, password=Config.DB_PASSWORD, database=Config.DB_NAME); cursor = db.cursor(); cursor.execute('SELECT DATABASE(), VERSION()'); print('Koneksi berhasil:', cursor.fetchone()); cursor.close(); db.close()"
-      -hasilnya nanti = Koneksi berhasil: ('help_desk_comcam', '10.x.x-MariaDB')
+    -cd C:\Users\Marcell\Repositories\help_desk / cd help_desk
+      -python -c "from config import Config, validate_configuration; validate_configuration(); print(Config.DB_NAME, Config.DB_HOST, Config.DB_PORT)"
+        -hasilnya nanti = help_desk_comcam 127.0.0.1 3306
 
-    -python -m py_compile auth.py
-    -python -c "import auth; print('Blueprint:', auth.auth_bp.name)"
-      -hasilnya nanti = Blueprint: auth
-    
-    -python -m py_compile app.py
-    -python -c "from app import app; print(app.url_map)"
-      -hasilnya banyak
-    
-    -python -m flask --app app test-db
-      -hasilnya banyak
-    
-    -python -m flask --version
-      -hasilnya banyak
+      -python -c "import mysql.connector; from config import Config; db = mysql.connector.connect(host=Config.DB_HOST, port=Config.DB_PORT, user=Config.DB_USER, password=Config.DB_PASSWORD, database=Config.DB_NAME); cursor = db.cursor(); cursor.execute('SELECT DATABASE(), VERSION()'); print('Koneksi berhasil:', cursor.fetchone()); cursor.close(); db.close()"
+        -hasilnya nanti = Koneksi berhasil: ('help_desk_comcam', '10.x.x-MariaDB')
+
+      -python -m py_compile auth.py
+      -python -c "import auth; print('Blueprint:', auth.auth_bp.name)"
+        -hasilnya nanti = Blueprint: auth
+      
+      -python -m py_compile app.py
+      -python -c "from app import app; print(app.url_map)"
+        -hasilnya banyak
+      
+      -python -m flask --app app test-db
+        -hasilnya banyak
+      
+      -python -m flask --version
+        -hasilnya banyak
 
 8.kalau udah semua, tinggal ngerun webnya di app.py okay kawan-kawan kuh dan ini masih bersifat pengembangan jadi kembangin dah kalo
   kalian ada waktu dengan versi kalian sendiri
