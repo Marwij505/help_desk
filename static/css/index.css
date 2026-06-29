@@ -2815,3 +2815,24 @@ html:not(.js-enabled) .hero-visual {
         transform: none !important;
     }
 }
+
+
+/* =========================================================
+   PATCH BABAK 7 - LINK PROFIL PADA AREA AKUN
+   ========================================================= */
+.user-profile-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 9px 13px;
+    border-radius: 10px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.user-profile-link:hover {
+    background: #e2e5ff;
+}

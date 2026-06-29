@@ -211,7 +211,7 @@
                     Program Studi
                 </a>
 
-                <a href="#rekomendasi" class="nav-link">
+                <a href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}" class="nav-link">
                     Rekomendasi
                 </a>
 
@@ -220,7 +220,7 @@
                 </a>
 
                 {% if current_user.is_authenticated %}
-                    <a href="#akun-saya" class="nav-link">
+                    <a href="{{ url_for('profile') }}" class="nav-link">
                         Akun Saya
                     </a>
 
@@ -259,7 +259,7 @@
                 </button>
 
                 {% if current_user.is_authenticated %}
-                    <a href="#akun-saya" class="button button-login button-account">
+                    <a href="{{ url_for('profile') }}" class="button button-login button-account">
                         Akun Saya
                     </a>
 
@@ -523,6 +523,14 @@
                                 </div>
 
                                 <a
+                                    href="{{ url_for('profile') }}"
+                                    class="user-profile-link"
+                                    data-no-transition
+                                >
+                                    Lihat Profil
+                                </a>
+
+                                <a
                                     href="{{ url_for('auth.logout') }}"
                                     class="user-profile-logout"
                                     data-no-transition
@@ -557,7 +565,7 @@
                                         <small>Temukan kampus dan prodi.</small>
                                     </a>
 
-                                    <a href="#rekomendasi" class="quick-action-card">
+                                    <a href="{{ url_for('recommendation') }}" class="quick-action-card">
                                         <span class="quick-action-icon">
                                             <svg aria-hidden="true">
                                                 <use href="#icon-interest"></use>
@@ -567,7 +575,7 @@
                                         <small>Cek arah bidang studi.</small>
                                     </a>
 
-                                    <a href="#rekomendasi" class="quick-action-card">
+                                    <a href="{{ url_for('recommendation') }}" class="quick-action-card">
                                         <span class="quick-action-icon">
                                             <svg aria-hidden="true">
                                                 <use href="#icon-sparkle"></use>
@@ -585,6 +593,16 @@
                                         </span>
                                         <strong>Help Desk</strong>
                                         <small>Kirim kendala dan pertanyaan.</small>
+                                    </a>
+
+                                    <a href="{{ url_for('profile') }}" class="quick-action-card">
+                                        <span class="quick-action-icon">
+                                            <svg aria-hidden="true">
+                                                <use href="#icon-user"></use>
+                                            </svg>
+                                        </span>
+                                        <strong>Lengkapi Profil</strong>
+                                        <small>Bantu sistem memahami kebutuhanmu.</small>
                                     </a>
 
                                 </div>
@@ -741,7 +759,7 @@
                             dengan minat, aktivitas favorit, dan tujuan kariermu.
                         </p>
 
-                        <a href="#rekomendasi" class="card-link">
+                        <a href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}" class="card-link">
                             Mulai Pemetaan
 
                             <svg aria-hidden="true">
@@ -1207,7 +1225,7 @@
                     </ul>
 
                     <a
-                        href="#rekomendasi"
+                        href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}"
                         class="button button-light"
                     >
                         Mulai Pemetaan Minat
@@ -1572,8 +1590,8 @@
 
                 <a href="#program-studi">Cari Kampus</a>
                 <a href="#program-studi">Program Studi</a>
-                <a href="#rekomendasi">Pemetaan Minat</a>
-                <a href="#rekomendasi">Bandingkan Pilihan</a>
+                <a href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}">Pemetaan Minat</a>
+                <a href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}">Bandingkan Pilihan</a>
 
             </div>
 
@@ -1604,7 +1622,7 @@
                 <a href="#beranda">Tentang ComCam</a>
                 <a href="#program-studi">Sumber Data</a>
                 <a href="#faq">Hubungi Kami</a>
-                <a href="#rekomendasi">Kerja Sama</a>
+                <a href="#faq">Kerja Sama</a>
 
             </div>
 

@@ -113,6 +113,10 @@
                         <span>Help Desk</span>
                     </a>
 
+                    <a href="{{ url_for('profile') }}" class="header-button" data-no-transition>
+                        Profil
+                    </a>
+
                     {% if current_user.role == 'admin' %}
                         <a href="{{ url_for('admin_panel') }}" class="header-button" data-no-transition>
                             Admin
@@ -180,7 +184,7 @@
                     </div>
 
                     <div class="data-note" role="note">
-                        <strong>Catatan data demo:</strong> data kampus dan akreditasi di halaman ini adalah seed realistis untuk demo.
+                        <strong>Catatan data 5B:</strong> data kampus dan akreditasi di halaman ini adalah seed realistis untuk demo.
                         Untuk rilis final, informasi wajib diverifikasi melalui PDDikti, BAN-PT/LAM, dan website resmi kampus.
                     </div>
                 </div>
@@ -244,7 +248,7 @@
                     <a href="#kurikulum">Kurikulum</a>
                     <a href="#karier">Prospek Karier</a>
                     <a href="#kampus">Info Kampus</a>
-                    <a href="#direktori">Direktori</a>
+                    <a href="#direktori">Direktori 5B</a>
                     <a href="#program-terkait">Program Terkait</a>
                 </aside>
 
@@ -361,7 +365,7 @@
 
                     <!-- Direktori data realistis Babak 5B -->
                     <article class="content-card reveal" id="direktori" data-animation="fade-up">
-                        <span class="section-kicker">Direktori</span>
+                        <span class="section-kicker">Direktori 5B</span>
                         <h2>Seed kampus dan program studi ternama Indonesia</h2>
                         <p>
                             Daftar ini dibuat untuk kebutuhan presentasi dan simulasi penggunaan.

@@ -6,13 +6,20 @@ Compass Campus atau ComCam adalah platform web Help Desk pendidikan yang membant
 
 Website dikembangkan menggunakan HTML, CSS, JavaScript, Python Flask, dan MySQL XAMPP. Tampilan website dirancang responsif agar dapat digunakan melalui desktop, tablet, dan perangkat mobile.
 
-Status proyek: Dalam tahap pengembangan.
+Status proyek: Dalam tahap pengembangan (MASIH LAMA DAN RIBET tapi cocok untuk projek mata kuliah).
 
 # Step by step cara ngerun web ini (Kalau step ini gagal maka tanyalah AI)
 1.gunakan dan nyalakan xampp atau sejenisnya yang ada mysql
+
 2.make sure interpreter kalian python versi 3.14.5 atau versi yang bisa menampung library di step 3
-3.gunakan semua code dari folder database dan masukan ke dalam database kalian masing-masing
-4.buka terminal lalu jalankan ini masing-masing
+
+3.bikin database sesuai dengan keinginan klean masing-masing (rekomendasi gw help_desk_comcam)
+
+4.jangan lupa mengedit .env sesuai dengan database dan xampp kalian
+
+5.gunakan semua code dari folder database dan masukan ke dalam database kalian masing-masing
+
+6.buka terminal lalu jalankan ini masing-masing
   -python -m pip install --upgrade pip setuptools wheel
 
   -python -m pip install Flask mysql-connector-python python-dotenv Flask-Login Flask-WTF email-validator requests openai Flask-Limiter     Flask-Caching waitress
@@ -22,7 +29,8 @@ Status proyek: Dalam tahap pengembangan.
   -validasi 2 = python -c "import flask; import mysql.connector; import dotenv; import flask_login; import flask_wtf; import email_validator; import requests; import openai; import flask_limiter; import flask_caching; import waitress; print('Semua library ComCam berhasil dimuat')"
 
   -validasi 3 (cek sendiri) = python -m pip list
-5.test library dan code
+
+7.test library dan code
   -python -c "import secrets; print(secrets.token_hex(32))" -> gunakan hasilnya dan ubah didalam .env di bagian "FLASK_SECRET_KEY"
 
   -cd C:\Users\Marcell\Repositories\help_desk / cd help_desk

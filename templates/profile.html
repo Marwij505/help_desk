@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- =========================================================
+         HALAMAN BABAK 7: PROFIL DAN RIWAYAT PENGGUNA
+         ========================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Profil pengguna Compass Campus untuk mengelola data diri, preferensi kampus, riwayat aktivitas, dan keamanan akun."
+    >
+    <meta name="author" content="Compass Campus Team">
+
+    <title>Profil Pengguna | Compass Campus</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/profile.css') }}"
+    >
+</head>
+<body class="profile-page">
+
+    <!-- =====================================================
+         SVG SPRITE
+         Ikon disimpan langsung agar halaman tetap mandiri.
+         ===================================================== -->
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5 14 14l-5.5 1.5L10 10z"></path></symbol>
+        <symbol id="icon-home" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></symbol>
+        <symbol id="icon-ticket" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"></path><path d="M13 5v2"></path><path d="M13 11v2"></path><path d="M13 17v2"></path></symbol>
+        <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></symbol>
+        <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol>
+        <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 19V5"></path><path d="M4 19h16"></path><path d="M8 16v-5"></path><path d="M12 16V8"></path><path d="M16 16v-7"></path></symbol>
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></symbol>
+    </svg>
+
+    <!-- =====================================================
+         HEADER MODUL PROFIL
+         ===================================================== -->
+    <header class="profile-header">
+        <div class="container header-container">
+            <a href="{{ url_for('index') }}" class="brand" aria-label="Kembali ke beranda Compass Campus">
+                <span class="brand-icon"><svg aria-hidden="true"><use href="#icon-compass"></use></svg></span>
+                <span class="brand-text">
+                    <strong>Compass Campus</strong>
+                    <small>Profil Pengguna</small>
+                </span>
+            </a>
+
+            <nav class="profile-nav" aria-label="Navigasi profil">
+                <a href="{{ url_for('index') }}"><svg aria-hidden="true"><use href="#icon-home"></use></svg>Beranda</a>
+                <a href="{{ url_for('recommendation') }}">Rekomendasi</a>
+                <a href="{{ url_for('ticket') }}"><svg aria-hidden="true"><use href="#icon-ticket"></use></svg>Tiket</a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('admin_panel') }}">Admin</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}" class="nav-danger">Keluar</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- =====================================================
+             HERO PROFIL
+             ===================================================== -->
+        <section class="profile-hero">
+            <div class="container hero-grid">
+                <div class="hero-copy reveal" data-animation="fade-right">
+                    <div class="hero-badge">
+                        <svg aria-hidden="true"><use href="#icon-user"></use></svg>
+                        <span>Babak 7 · Profil dan Riwayat Pengguna</span>
+                    </div>
+                    <h1>Kelola profil agar rekomendasi lebih tepat.</h1>
+                    <p>
+                        Lengkapi data diri, asal sekolah, tujuan kuliah, preferensi kampus,
+                        dan keamanan akun. Data ini membantu ComCam memberikan pengalaman
+                        yang lebih personal dan mudah dipahami.
+                    </p>
+                </div>
+
+                <aside class="hero-profile-card reveal" data-animation="fade-left">
+                    <div class="profile-avatar">{{ current_user.full_name[:1]|upper }}</div>
+                    <div class="profile-main-info">
+                        <span>Login sebagai</span>
+                        <strong>{{ current_user.full_name }}</strong>
+                        <small>{{ current_user.email }}</small>
+                    </div>
+                    <div class="completion-box" aria-label="Kelengkapan profil">
+                        <div class="completion-head">
+                            <span>Kelengkapan profil</span>
+                            <strong>{{ profile_completion }}%</strong>
+                        </div>
+                        <div class="progress-track"><span style="width: {{ profile_completion }}%"></span></div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- =====================================================
+             KONTEN PROFIL
+             ===================================================== -->
+        <section class="profile-content-section" id="profil-saya">
+            <div class="container profile-layout">
+
+                <!-- Sidebar ringkas agar pengguna cepat melihat status akun. -->
+                <aside class="profile-sidebar reveal" data-animation="fade-up">
+                    <div class="sidebar-card identity-card">
+                        <div class="profile-avatar profile-avatar-large">{{ current_user.full_name[:1]|upper }}</div>
+                        <h2>{{ current_user.full_name }}</h2>
+                        <p>{{ current_user.email }}</p>
+                        <span class="role-pill">{{ current_user.role|title }}</span>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <h3>Ringkasan aktivitas</h3>
+                        <div class="summary-list">
+                            <div><span>Total tiket</span><strong>{{ activity_summary.ticket_total }}</strong></div>
+                            <div><span>Tiket aktif</span><strong>{{ activity_summary.ticket_active }}</strong></div>
+                            <div><span>Rekomendasi dibuat</span><strong>{{ activity_summary.recommendation_total }}</strong></div>
+                            <div><span>Program tersimpan</span><strong>{{ activity_summary.saved_programs }}</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card note-card">
+                        <h3>Status data</h3>
+                        <p>
+                            Data profil dipakai untuk personalisasi tampilan dan rekomendasi.
+                            Data kampus masih dikembangkan bertahap sehingga hasil rekomendasi
+                            belum menggantikan konsultasi akademik resmi.
+                        </p>
+                    </div>
+                </aside>
+
+                <div class="profile-main">
+                    <!-- Pesan sukses/error -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="message-stack" role="status">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    {% if errors %}
+                        <div class="message-stack" role="alert">
+                            {% for error in errors %}
+                                <div class="alert alert-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- =================================================
+                         FORM PROFIL UTAMA
+                         ================================================= -->
+                    <form class="profile-card form-card reveal" data-animation="fade-up" method="POST" action="{{ url_for('profile') }}#profil-saya">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="profile_action" value="profile">
+
+                        <div class="card-heading">
+                            <span>Data utama</span>
+                            <h2>Identitas dan kontak</h2>
+                            <p>Gunakan data yang benar agar admin dan konselor mudah memahami kebutuhanmu.</p>
+                        </div>
+
+                        <div class="form-grid two-columns">
+                            <label class="form-field">
+                                <span>Nama lengkap</span>
+                                <input type="text" name="full_name" value="{{ form_data.full_name }}" required maxlength="100">
+                            </label>
+
+                            <label class="form-field readonly-field">
+                                <span>Email akun</span>
+                                <input type="email" value="{{ form_data.email }}" readonly>
+                                <small>Email login tidak diubah dari halaman ini.</small>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Nomor HP</span>
+                                <input type="text" name="phone_number" value="{{ form_data.phone_number }}" maxlength="30" placeholder="Contoh: 081234567890">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Tanggal lahir</span>
+                                <input type="date" name="date_of_birth" value="{{ form_data.date_of_birth }}">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Gender</span>
+                                <select name="gender">
+                                    {% for value, label in gender_options %}
+                                        <option value="{{ value }}" {% if form_data.gender == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Asal kota</span>
+                                <input type="text" name="city" value="{{ form_data.city }}" maxlength="100" placeholder="Contoh: Bekasi">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Provinsi</span>
+                                <input type="text" name="province" value="{{ form_data.province }}" maxlength="100" placeholder="Contoh: Jawa Barat">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Alamat singkat</span>
+                                <input type="text" name="address" value="{{ form_data.address }}" maxlength="255" placeholder="Opsional, cukup wilayah umum">
+                            </label>
+                        </div>
+
+                        <div class="card-heading secondary-heading">
+                            <span>Riwayat pendidikan</span>
+                            <h2>Asal sekolah dan tujuan kuliah</h2>
+                        </div>
+
+                        <div class="form-grid two-columns">
+                            <label class="form-field">
+                                <span>Asal sekolah</span>
+                                <input type="text" name="school_origin" value="{{ form_data.school_origin }}" maxlength="150" placeholder="Contoh: SMA Negeri 1 Bekasi">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Tahun lulus</span>
+                                <input type="number" name="graduation_year" value="{{ form_data.graduation_year }}" min="1990" max="2100" placeholder="2026">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Jenjang terakhir</span>
+                                <select name="education_level">
+                                    {% for value, label in education_level_options %}
+                                        <option value="{{ value }}" {% if form_data.education_level == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Target jenjang kuliah</span>
+                                <select name="target_degree">
+                                    {% for value, label in target_degree_options %}
+                                        <option value="{{ value }}" {% if form_data.target_degree == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="card-heading secondary-heading">
+                            <span>Preferensi studi</span>
+                            <h2>Minat, lokasi, dan rencana karier</h2>
+                        </div>
+
+                        <div class="form-grid two-columns">
+                            <label class="form-field">
+                                <span>Bidang studi incaran</span>
+                                <input type="text" name="target_study_field" value="{{ form_data.target_study_field }}" maxlength="120" placeholder="Contoh: Informatika, Psikologi, Manajemen">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Jenis kampus yang diminati</span>
+                                <select name="preferred_campus_type">
+                                    {% for value, label in campus_type_options %}
+                                        <option value="{{ value }}" {% if form_data.preferred_campus_type == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Lokasi kampus pilihan</span>
+                                <input type="text" name="preferred_location" value="{{ form_data.preferred_location }}" maxlength="120" placeholder="Contoh: Jakarta, Bandung, Yogyakarta">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Rentang biaya</span>
+                                <select name="budget_range">
+                                    {% for value, label in budget_options %}
+                                        <option value="{{ value }}" {% if form_data.budget_range == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Gaya belajar</span>
+                                <select name="learning_preference">
+                                    {% for value, label in learning_options %}
+                                        <option value="{{ value }}" {% if form_data.learning_preference == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Tujuan karier</span>
+                                <input type="text" name="career_goal" value="{{ form_data.career_goal }}" maxlength="180" placeholder="Contoh: Software engineer, entrepreneur, konselor">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Kemampuan paling kuat</span>
+                                <input type="text" name="strongest_skill" value="{{ form_data.strongest_skill }}" maxlength="180" placeholder="Contoh: Logika, komunikasi, desain, hitung-hitungan">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Mata pelajaran favorit</span>
+                                <input type="text" name="favorite_subjects" value="{{ form_data.favorite_subjects }}" maxlength="180" placeholder="Contoh: Matematika, ekonomi, biologi">
+                            </label>
+                        </div>
+
+                        <div class="form-grid">
+                            <label class="form-field">
+                                <span>Hobi atau aktivitas yang sering dilakukan</span>
+                                <input type="text" name="hobbies" value="{{ form_data.hobbies }}" maxlength="180" placeholder="Contoh: Coding, organisasi, menggambar, menulis">
+                            </label>
+
+                            <label class="form-field">
+                                <span>Cerita singkat tentang dirimu</span>
+                                <textarea name="bio" maxlength="700" rows="5" placeholder="Tulis hal yang perlu diketahui konselor, misalnya kondisi, keraguan, atau tujuan kuliahmu.">{{ form_data.bio }}</textarea>
+                                <small><span id="bio-counter">0</span>/700 karakter</small>
+                            </label>
+                        </div>
+
+                        <div class="preference-box">
+                            <label class="toggle-row">
+                                <input type="checkbox" name="notification_email" value="1" {% if form_data.notification_email == '1' %}checked{% endif %}>
+                                <span>Email notifikasi aktif</span>
+                            </label>
+                            <label class="toggle-row">
+                                <input type="checkbox" name="notification_ticket" value="1" {% if form_data.notification_ticket == '1' %}checked{% endif %}>
+                                <span>Beritahu saat tiket dibalas admin</span>
+                            </label>
+                            <label class="toggle-row">
+                                <input type="checkbox" name="allow_recommendation_history" value="1" {% if form_data.allow_recommendation_history == '1' %}checked{% endif %}>
+                                <span>Simpan riwayat rekomendasi untuk personalisasi</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="primary-button">
+                            Simpan Profil
+                            <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                        </button>
+                    </form>
+
+                    <!-- =================================================
+                         KEAMANAN AKUN
+                         ================================================= -->
+                    <section class="profile-card security-card reveal" id="keamanan-akun" data-animation="fade-up">
+                        <div class="card-heading">
+                            <span>Keamanan akun</span>
+                            <h2>Ubah kata sandi</h2>
+                            <p>Gunakan kata sandi yang mudah kamu ingat, tetapi sulit ditebak orang lain.</p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('profile') }}#keamanan-akun" class="security-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="profile_action" value="security">
+
+                            <div class="form-grid three-columns">
+                                <label class="form-field">
+                                    <span>Kata sandi saat ini</span>
+                                    <input type="password" name="current_password" autocomplete="current-password">
+                                </label>
+                                <label class="form-field">
+                                    <span>Kata sandi baru</span>
+                                    <input type="password" name="new_password" autocomplete="new-password" minlength="8">
+                                </label>
+                                <label class="form-field">
+                                    <span>Konfirmasi kata sandi</span>
+                                    <input type="password" name="confirm_password" autocomplete="new-password" minlength="8">
+                                </label>
+                            </div>
+
+                            <button type="submit" class="secondary-button">
+                                <svg aria-hidden="true"><use href="#icon-lock"></use></svg>
+                                Perbarui Kata Sandi
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- =================================================
+                         RIWAYAT AKTIVITAS
+                         ================================================= -->
+                    <section class="history-grid">
+                        <article class="profile-card reveal" data-animation="fade-up">
+                            <div class="card-heading compact-heading">
+                                <span>Tiket terbaru</span>
+                                <h2>Riwayat bantuan</h2>
+                            </div>
+
+                            {% if recent_tickets %}
+                                <div class="history-list">
+                                    {% for ticket in recent_tickets %}
+                                        <a href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}" class="history-item">
+                                            <div>
+                                                <strong>{{ ticket.subject }}</strong>
+                                                <small>{{ ticket.ticket_code }} · {{ ticket.category_label }}</small>
+                                            </div>
+                                            <span class="status-badge status-{{ ticket.status }}">{{ ticket.status_label }}</span>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="empty-state">Belum ada tiket bantuan.</p>
+                            {% endif %}
+
+                            <a href="{{ url_for('ticket') }}" class="text-link">Buka halaman tiket</a>
+                        </article>
+
+                        <article class="profile-card reveal" data-animation="fade-up">
+                            <div class="card-heading compact-heading">
+                                <span>Rekomendasi terbaru</span>
+                                <h2>Riwayat pemetaan minat</h2>
+                            </div>
+
+                            {% if recommendation_history %}
+                                <div class="history-list">
+                                    {% for item in recommendation_history %}
+                                        <a href="{{ url_for('recommendation', result_id=item.id) }}#hasil-rekomendasi" class="history-item">
+                                            <div>
+                                                <strong>{{ item.preferred_field_label }}</strong>
+                                                <small>{{ item.result_count }} hasil · Skor terbaik {{ item.best_score or 0 }}%</small>
+                                            </div>
+                                            <span class="history-date">
+                                                {% if item.created_at.strftime %}{{ item.created_at.strftime('%d/%m/%Y') }}{% else %}{{ item.created_at }}{% endif %}
+                                            </span>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="empty-state">Belum ada riwayat pemetaan minat.</p>
+                            {% endif %}
+
+                            <a href="{{ url_for('recommendation') }}" class="text-link">Buat pemetaan baru</a>
+                        </article>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/profile.js') }}" defer></script>
+</body>
+</html>

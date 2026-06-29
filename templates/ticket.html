@@ -82,6 +82,10 @@
                 </a>
 
                 {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('profile') }}" class="nav-primary">
+                        Profil
+                    </a>
+
                     {% if current_user.role == 'admin' %}
                         <a href="{{ url_for('admin_panel') }}" class="nav-primary">
                             Admin

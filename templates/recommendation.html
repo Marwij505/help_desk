@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- =========================================================
+         HALAMAN BABAK 6: PEMETAAN MINAT DAN REKOMENDASI
+         ========================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Pemetaan minat Compass Campus untuk membantu calon mahasiswa menemukan program studi yang sesuai."
+    >
+
+    <title>Pemetaan Minat | Compass Campus</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/recommendation.css') }}"
+    >
+</head>
+<body class="recommendation-page">
+
+    <!-- =====================================================
+         KUMPULAN IKON SVG
+         ===================================================== -->
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-compass" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M15.5 8.5 14 14l-5.5 1.5L10 10z"></path>
+        </symbol>
+        <symbol id="icon-home" viewBox="0 0 24 24">
+            <path d="M3 11 12 3l9 8"></path>
+            <path d="M5 10v10h14V10"></path>
+            <path d="M9 20v-6h6v6"></path>
+        </symbol>
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+        </symbol>
+        <symbol id="icon-sparkle" viewBox="0 0 24 24">
+            <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"></path>
+            <path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path>
+        </symbol>
+        <symbol id="icon-user" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 21a8 8 0 0 1 16 0"></path>
+        </symbol>
+        <symbol id="icon-chart" viewBox="0 0 24 24">
+            <path d="M4 19V5"></path>
+            <path d="M4 19h16"></path>
+            <path d="M8 16v-5"></path>
+            <path d="M12 16V8"></path>
+            <path d="M16 16v-7"></path>
+        </symbol>
+    </svg>
+
+    <!-- =====================================================
+         HEADER MODUL REKOMENDASI
+         ===================================================== -->
+    <header class="module-header">
+        <div class="container header-container">
+            <a href="{{ url_for('index') }}" class="brand" aria-label="Kembali ke beranda Compass Campus">
+                <span class="brand-icon">
+                    <svg aria-hidden="true"><use href="#icon-compass"></use></svg>
+                </span>
+                <span>
+                    <strong>Compass Campus</strong>
+                    <small>Pemetaan Minat</small>
+                </span>
+            </a>
+
+            <nav class="module-nav" aria-label="Navigasi modul rekomendasi">
+                <a href="{{ url_for('index') }}" class="module-button module-button-ghost">
+                    <svg aria-hidden="true"><use href="#icon-home"></use></svg>
+                    Beranda
+                </a>
+                <a href="{{ url_for('ticket') }}" class="module-button module-button-ghost">
+                    Tiket Saya
+                </a>
+                <a href="{{ url_for('profile') }}" class="module-button module-button-ghost">
+                    Profil
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="module-button module-button-danger">
+                    Keluar
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- =====================================================
+             HERO MODUL
+             ===================================================== -->
+        <section class="recommendation-hero">
+            <div class="container hero-grid">
+                <div class="hero-copy reveal" data-animation="fade-right">
+                    <div class="hero-badge">
+                        <svg aria-hidden="true"><use href="#icon-sparkle"></use></svg>
+                        <span>Babak 6 · Pemetaan Minat</span>
+                    </div>
+
+                    <h1>Temukan program studi yang paling sesuai dengan minatmu.</h1>
+
+                    <p>
+                        Jawab beberapa pertanyaan singkat. Sistem akan membaca pola minat,
+                        gaya belajar, dan tujuan kariermu untuk menampilkan rekomendasi program studi.
+                    </p>
+                </div>
+
+                <aside class="hero-profile-card reveal" data-animation="fade-left" aria-label="Informasi akun">
+                    <div class="profile-avatar">
+                        {{ current_user.full_name[:1]|upper }}
+                    </div>
+                    <div>
+                        <span>Login sebagai</span>
+                        <strong>{{ current_user.full_name }}</strong>
+                        <small>{{ current_user.email }}</small>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- =====================================================
+             KONTEN UTAMA
+             ===================================================== -->
+        <section class="recommendation-workspace" id="interest-form">
+            <div class="container workspace-grid">
+
+                <!-- =================================================
+                     FORM PEMETAAN MINAT
+                     ================================================= -->
+                <section class="panel form-panel reveal" data-animation="fade-up">
+                    <span class="section-label">Isi pemetaan</span>
+                    <h2>Jawab dengan pilihan yang paling dekat dengan dirimu.</h2>
+                    <p class="panel-description">
+                        Tidak ada jawaban benar atau salah. Pilih berdasarkan minat dan kebiasaan belajarmu.
+                    </p>
+
+                    {% if errors %}
+                        <div class="alert alert-error" role="alert">
+                            {% for error in errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}" role="status">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('recommendation') }}#interest-form" method="POST" class="interest-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="form-grid">
+                            <label class="form-field">
+                                <span>Bidang yang paling menarik</span>
+                                <select name="preferred_field" required>
+                                    <option value="">Pilih bidang</option>
+                                    {% for value, label in recommendation_options.preferred_field %}
+                                        <option value="{{ value }}" {% if form_data.preferred_field == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Mata pelajaran yang disukai</span>
+                                <select name="favorite_subject" required>
+                                    <option value="">Pilih mata pelajaran</option>
+                                    {% for value, label in recommendation_options.favorite_subject %}
+                                        <option value="{{ value }}" {% if form_data.favorite_subject == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Aktivitas yang paling nyaman</span>
+                                <select name="preferred_activity" required>
+                                    <option value="">Pilih aktivitas</option>
+                                    {% for value, label in recommendation_options.preferred_activity %}
+                                        <option value="{{ value }}" {% if form_data.preferred_activity == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field">
+                                <span>Gaya belajar</span>
+                                <select name="learning_style" required>
+                                    <option value="">Pilih gaya belajar</option>
+                                    {% for value, label in recommendation_options.learning_style %}
+                                        <option value="{{ value }}" {% if form_data.learning_style == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field full-field">
+                                <span>Tujuan karier yang paling dekat</span>
+                                <select name="career_goal" required>
+                                    <option value="">Pilih tujuan karier</option>
+                                    {% for value, label in recommendation_options.career_goal %}
+                                        <option value="{{ value }}" {% if form_data.career_goal == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+
+                            <label class="form-field full-field">
+                                <span>Catatan tambahan</span>
+                                <textarea
+                                    name="notes"
+                                    maxlength="500"
+                                    placeholder="Opsional. Contoh: Saya ingin jurusan yang banyak praktik dan peluang kerja digital."
+                                >{{ form_data.notes }}</textarea>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="primary-button">
+                            Buat Rekomendasi
+                            <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                        </button>
+                    </form>
+                </section>
+
+                <!-- =================================================
+                     RIWAYAT DAN INFO PROSES
+                     ================================================= -->
+                <aside class="side-stack reveal" data-animation="fade-up">
+                    <section class="panel compact-panel">
+                        <span class="section-label">Cara kerja</span>
+                        <h3>Rekomendasi dibuat dari pola jawabanmu.</h3>
+                        <ul class="info-list">
+                            <li>Minat utama memberi bobot terbesar.</li>
+                            <li>Aktivitas dan gaya belajar memperhalus hasil.</li>
+                            <li>Hasil tetap berupa saran, bukan keputusan mutlak.</li>
+                        </ul>
+                    </section>
+
+                    <section class="panel compact-panel">
+                        <span class="section-label">Riwayat</span>
+                        <h3>Hasil terbaru.</h3>
+
+                        {% if history %}
+                            <div class="history-list">
+                                {% for item in history %}
+                                    <a href="{{ url_for('recommendation', result_id=item.id) }}#hasil-rekomendasi" class="history-item">
+                                        <span>{{ item.preferred_field_label }}</span>
+                                        <strong>{{ item.best_score or 0 }}%</strong>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="empty-text">Belum ada riwayat. Isi form untuk membuat rekomendasi pertama.</p>
+                        {% endif %}
+                    </section>
+                </aside>
+            </div>
+        </section>
+
+        <!-- =====================================================
+             HASIL REKOMENDASI
+             ===================================================== -->
+        <section class="result-section" id="hasil-rekomendasi">
+            <div class="container result-container reveal" data-animation="fade-up">
+                <div class="result-heading">
+                    <div>
+                        <span class="section-label">Hasil rekomendasi</span>
+                        <h2>Program studi yang bisa kamu pertimbangkan.</h2>
+                    </div>
+                    <p>
+                        Buka detail program studi untuk melihat kampus, prospek karier,
+                        kurikulum umum, dan informasi pendukung lainnya.
+                    </p>
+                </div>
+
+                {% if results %}
+                    <div class="recommendation-result-list">
+                        {% for item in results %}
+                            <article class="result-card">
+                                <div class="result-rank">{{ item.rank_order }}</div>
+                                <div class="result-main">
+                                    <span class="result-category">{{ item.campus_name }}{% if item.campus_city %} · {{ item.campus_city }}{% endif %}</span>
+                                    <h3>{{ item.program_name }}</h3>
+                                    <p>{{ item.reason }}</p>
+                                    <div class="result-actions">
+                                        <span class="score-pill">{{ item.score }}% cocok</span>
+                                        <a href="{{ url_for('campus_detail_slug', program_slug=item.program_slug) }}" class="detail-link">
+                                            Lihat detail
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-result">
+                        <svg aria-hidden="true"><use href="#icon-chart"></use></svg>
+                        <h3>Belum ada hasil rekomendasi.</h3>
+                        <p>Isi form pemetaan minat di atas untuk melihat hasil yang sesuai dengan profilmu.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <script
+        src="{{ url_for('static', filename='js/recommendation.js') }}"
+        defer
+    ></script>
+</body>
+</html>

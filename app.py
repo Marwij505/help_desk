@@ -23,6 +23,11 @@ import secrets
 
 from mysql.connector import Error
 
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash,
+)
+
 from flask_login import (
     current_user,
     login_required,
@@ -222,6 +227,16 @@ def create_app(
 
             return redirect(
                 url_for("admin_panel") + "#admin-tickets"
+            )
+
+        if request.path.startswith("/recommendation") or request.path.startswith("/pemetaan-minat"):
+            flash(
+                "Sesi formulir pemetaan minat sudah berakhir. Muat ulang halaman, lalu coba kembali.",
+                "error",
+            )
+
+            return redirect(
+                url_for("recommendation") + "#interest-form"
             )
 
         template_by_path = {
@@ -1608,7 +1623,7 @@ def create_app(
 
     def load_program_directory(limit: int = 36) -> list[dict[str, Any]]:
         """
-        Mengambil daftar program studi untuk direktori.
+        Mengambil daftar program studi untuk direktori Babak 5B.
 
         Direktori ini belum menjadi modul search penuh.
         Tujuannya agar halaman campus-detail terasa realistis saat demo
@@ -1642,7 +1657,7 @@ def create_app(
 
     def load_directory_stats() -> dict[str, int]:
         """
-        Menghitung statistik ringkas data kampus.
+        Menghitung statistik ringkas data kampus Babak 5B.
         """
 
         stats = {
@@ -2323,7 +2338,7 @@ def create_app(
             search_notice = (
                 f"Kami belum menemukan hasil yang cocok untuk '{search_query}' karena data masih belum lengkap. "
                 "Silakan coba kata kunci lain seperti nama kampus ternama, nama program studi terminat, "
-                "atau bidang keilmuan yang ingin kamu cari tapi yang banyak minatnya."
+                "atau bidang keilmuan yang ingin kamu cari tapi yang peminatnya banyak."
             )
 
             # Menjaga posisi pengguna tetap berada di bagian Program Studi
@@ -2356,6 +2371,1168 @@ def create_app(
 
         return search()
 
+
+    # =====================================================
+    # 5.9. HELPER BABAK 6 - PEMETAAN MINAT DAN REKOMENDASI
+    # =====================================================
+
+    RECOMMENDATION_OPTIONS = {
+        "preferred_field": [
+            ("teknologi", "Teknologi dan komputer"),
+            ("bisnis", "Bisnis dan manajemen"),
+            ("kesehatan", "Kesehatan"),
+            ("teknik", "Teknik dan rekayasa"),
+            ("sosial", "Sosial dan komunikasi"),
+            ("desain", "Desain dan seni"),
+        ],
+        "favorite_subject": [
+            ("matematika", "Matematika atau logika"),
+            ("ekonomi", "Ekonomi atau kewirausahaan"),
+            ("biologi", "Biologi atau kesehatan"),
+            ("fisika", "Fisika atau teknologi"),
+            ("sosial", "Sosiologi atau komunikasi"),
+            ("seni", "Seni atau desain"),
+        ],
+        "preferred_activity": [
+            ("membangun_sistem", "Membangun aplikasi atau sistem"),
+            ("menganalisis_data", "Menganalisis data dan masalah"),
+            ("mengelola_bisnis", "Mengelola bisnis atau organisasi"),
+            ("membantu_orang", "Membantu dan melayani orang"),
+            ("mendesain_visual", "Membuat desain visual"),
+            ("berkomunikasi", "Berkomunikasi dan presentasi"),
+        ],
+        "learning_style": [
+            ("praktik", "Belajar lewat praktik langsung"),
+            ("analitis", "Belajar lewat analisis dan riset"),
+            ("kolaboratif", "Belajar lewat diskusi tim"),
+            ("kreatif", "Belajar lewat eksplorasi ide"),
+        ],
+        "career_goal": [
+            ("software", "Karier digital atau software"),
+            ("business", "Karier bisnis atau manajemen"),
+            ("healthcare", "Karier kesehatan"),
+            ("engineer", "Karier teknik atau industri"),
+            ("communication", "Karier komunikasi atau layanan publik"),
+            ("creative", "Karier kreatif"),
+        ],
+    }
+
+    CATEGORY_LABELS = {
+        "teknologi": "Teknologi dan Komputer",
+        "bisnis": "Bisnis dan Manajemen",
+        "kesehatan": "Kesehatan",
+        "teknik": "Teknik dan Rekayasa",
+        "sosial": "Sosial dan Komunikasi",
+        "desain": "Desain dan Seni",
+    }
+
+    def ensure_recommendation_tables() -> None:
+        """
+        Membuat tabel Babak 6 untuk menyimpan hasil pemetaan minat.
+
+        Tabel dibuat terpisah dari data kampus agar alur aplikasi rapi:
+        - user_interest_profiles menyimpan jawaban pengguna.
+        - user_recommendation_results menyimpan daftar rekomendasi hasil kalkulasi.
+        """
+
+        with database.get_cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_interest_profiles (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    user_id INT UNSIGNED NOT NULL,
+                    preferred_field VARCHAR(50) NOT NULL,
+                    favorite_subject VARCHAR(50) NOT NULL,
+                    preferred_activity VARCHAR(50) NOT NULL,
+                    learning_style VARCHAR(50) NOT NULL,
+                    career_goal VARCHAR(50) NOT NULL,
+                    notes TEXT DEFAULT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    KEY idx_interest_user (user_id),
+                    CONSTRAINT fk_interest_user
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                        ON DELETE CASCADE
+                ) ENGINE=InnoDB
+                  DEFAULT CHARACTER SET utf8mb4
+                  COLLATE utf8mb4_unicode_ci
+                """
+            )
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_recommendation_results (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    profile_id BIGINT UNSIGNED NOT NULL,
+                    user_id INT UNSIGNED NOT NULL,
+                    rank_order TINYINT UNSIGNED NOT NULL,
+                    program_slug VARCHAR(120) NOT NULL,
+                    program_name VARCHAR(160) NOT NULL,
+                    campus_name VARCHAR(160) NOT NULL,
+                    campus_city VARCHAR(100) DEFAULT NULL,
+                    score TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                    reason TEXT NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    KEY idx_recommendation_user (user_id),
+                    KEY idx_recommendation_profile (profile_id),
+                    CONSTRAINT fk_recommendation_profile
+                        FOREIGN KEY (profile_id) REFERENCES user_interest_profiles(id)
+                        ON DELETE CASCADE,
+                    CONSTRAINT fk_recommendation_user
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                        ON DELETE CASCADE
+                ) ENGINE=InnoDB
+                  DEFAULT CHARACTER SET utf8mb4
+                  COLLATE utf8mb4_unicode_ci
+                """
+            )
+
+        database.commit_db()
+
+
+    def option_values(option_name: str) -> set[str]:
+        """Mengambil nilai valid dari daftar pilihan form rekomendasi."""
+
+        return {
+            value
+            for value, _label in RECOMMENDATION_OPTIONS.get(option_name, [])
+        }
+
+
+    def validate_recommendation_form(form_data: Any) -> tuple[dict[str, str], list[str]]:
+        """
+        Membersihkan dan memvalidasi jawaban pemetaan minat.
+
+        Validasi dibuat eksplisit agar user tidak bisa mengirim nilai bebas
+        yang tidak tersedia di pilihan antarmuka.
+        """
+
+        fields = [
+            "preferred_field",
+            "favorite_subject",
+            "preferred_activity",
+            "learning_style",
+            "career_goal",
+        ]
+
+        cleaned: dict[str, str] = {}
+        errors: list[str] = []
+
+        for field in fields:
+            value = str(form_data.get(field, "")).strip()
+            cleaned[field] = value
+
+            if not value:
+                errors.append("Lengkapi seluruh pilihan pemetaan minat terlebih dahulu.")
+                continue
+
+            if value not in option_values(field):
+                errors.append("Terdapat pilihan yang tidak valid. Silakan ulangi pemetaan minat.")
+
+        notes = str(form_data.get("notes", "")).strip()
+        cleaned["notes"] = notes[:500]
+
+        # Hapus duplikasi pesan agar tampilan tetap rapi.
+        return cleaned, list(dict.fromkeys(errors))
+
+
+    def get_program_category(program_row: dict[str, Any]) -> str:
+        """
+        Mengelompokkan program studi berdasarkan teks nama, fakultas, dan ringkasan.
+
+        Fungsi ini dipakai untuk seed demo. Pada versi final, kategori idealnya
+        disimpan langsung di database agar lebih presisi.
+        """
+
+        text = " ".join(
+            [
+                str(program_row.get("program_name", "")),
+                str(program_row.get("faculty", "")),
+                str(program_row.get("summary", "")),
+            ]
+        ).lower()
+
+        if any(keyword in text for keyword in ["informatika", "komputer", "sistem informasi", "data", "ai", "cyber"]):
+            return "teknologi"
+        if any(keyword in text for keyword in ["manajemen", "bisnis", "akuntansi", "ekonomi", "administrasi"]):
+            return "bisnis"
+        if any(keyword in text for keyword in ["kedokteran", "farmasi", "keperawatan", "gizi", "kesehatan", "psikologi"]):
+            return "kesehatan"
+        if any(keyword in text for keyword in ["teknik", "sipil", "industri", "mesin", "elektro", "arsitektur"]):
+            return "teknik"
+        if any(keyword in text for keyword in ["komunikasi", "hukum", "hubungan", "publik", "sosial", "pendidikan"]):
+            return "sosial"
+        if any(keyword in text for keyword in ["desain", "visual", "seni", "kreatif", "dkv"]):
+            return "desain"
+
+        return "teknologi"
+
+
+    def load_recommendation_program_pool() -> list[dict[str, Any]]:
+        """
+        Mengambil program studi dari tabel Babak 5B.
+
+        Jika database kampus belum siap, fungsi tetap mengembalikan fallback
+        agar halaman rekomendasi tidak blank saat demo.
+        """
+
+        fallback_programs = [
+            {
+                "program_slug": "teknik-informatika",
+                "program_name": "Teknik Informatika",
+                "faculty": "Fakultas Ilmu Komputer",
+                "campus_name": "Universitas Esa Unggul",
+                "campus_city": "Bekasi",
+                "summary": "Program untuk pemrograman, data, dan pengembangan sistem digital.",
+            },
+            {
+                "program_slug": "sistem-informasi",
+                "program_name": "Sistem Informasi",
+                "faculty": "Fakultas Ilmu Komputer",
+                "campus_name": "Universitas Esa Unggul",
+                "campus_city": "Bekasi",
+                "summary": "Program untuk sistem bisnis, analisis proses, dan teknologi informasi.",
+            },
+            {
+                "program_slug": "manajemen",
+                "program_name": "Manajemen",
+                "faculty": "Fakultas Ekonomi dan Bisnis",
+                "campus_name": "Universitas Esa Unggul",
+                "campus_city": "Bekasi",
+                "summary": "Program untuk manajemen organisasi, bisnis, pemasaran, dan kewirausahaan.",
+            },
+        ]
+
+        try:
+            ensure_campus_tables()
+
+            with database.get_cursor(dictionary=True) as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        sp.slug AS program_slug,
+                        sp.program_name,
+                        sp.faculty,
+                        sp.summary,
+                        c.campus_name,
+                        c.city AS campus_city
+                    FROM study_programs sp
+                    INNER JOIN campuses c ON c.id = sp.campus_id
+                    WHERE sp.is_active = 1
+                    ORDER BY c.campus_name ASC, sp.program_name ASC
+                    LIMIT 120
+                    """
+                )
+                rows = cursor.fetchall()
+
+            return [dict(row) for row in rows] or fallback_programs
+
+        except (Error, RuntimeError):
+            app.logger.exception("Data program untuk rekomendasi gagal dimuat.")
+            return fallback_programs
+
+
+    def calculate_interest_scores(cleaned_data: dict[str, str]) -> dict[str, int]:
+        """
+        Menghitung skor kategori berdasarkan pilihan user.
+
+        Pendekatan ini sengaja rule-based agar mudah dijelaskan saat presentasi IMK.
+        Setiap jawaban menambah skor ke bidang yang relevan.
+        """
+
+        scores = {
+            "teknologi": 0,
+            "bisnis": 0,
+            "kesehatan": 0,
+            "teknik": 0,
+            "sosial": 0,
+            "desain": 0,
+        }
+
+        direct_field = cleaned_data.get("preferred_field", "")
+        if direct_field in scores:
+            scores[direct_field] += 35
+
+        subject_map = {
+            "matematika": {"teknologi": 18, "teknik": 14, "bisnis": 8},
+            "ekonomi": {"bisnis": 22, "sosial": 8},
+            "biologi": {"kesehatan": 24, "sosial": 6},
+            "fisika": {"teknik": 22, "teknologi": 10},
+            "sosial": {"sosial": 22, "bisnis": 8},
+            "seni": {"desain": 24, "sosial": 6},
+        }
+
+        activity_map = {
+            "membangun_sistem": {"teknologi": 24, "teknik": 8},
+            "menganalisis_data": {"teknologi": 18, "bisnis": 10},
+            "mengelola_bisnis": {"bisnis": 24, "sosial": 6},
+            "membantu_orang": {"kesehatan": 18, "sosial": 12},
+            "mendesain_visual": {"desain": 24, "teknologi": 6},
+            "berkomunikasi": {"sosial": 22, "bisnis": 6},
+        }
+
+        learning_map = {
+            "praktik": {"teknik": 10, "kesehatan": 8, "teknologi": 8},
+            "analitis": {"teknologi": 12, "bisnis": 8, "teknik": 8},
+            "kolaboratif": {"sosial": 10, "bisnis": 8, "kesehatan": 6},
+            "kreatif": {"desain": 12, "sosial": 8, "teknologi": 4},
+        }
+
+        career_map = {
+            "software": {"teknologi": 25},
+            "business": {"bisnis": 25},
+            "healthcare": {"kesehatan": 25},
+            "engineer": {"teknik": 25},
+            "communication": {"sosial": 25},
+            "creative": {"desain": 25},
+        }
+
+        for mapping, selected in [
+            (subject_map, cleaned_data.get("favorite_subject")),
+            (activity_map, cleaned_data.get("preferred_activity")),
+            (learning_map, cleaned_data.get("learning_style")),
+            (career_map, cleaned_data.get("career_goal")),
+        ]:
+            for category, point in mapping.get(selected, {}).items():
+                scores[category] += point
+
+        return scores
+
+
+    def build_recommendation_results(cleaned_data: dict[str, str]) -> tuple[list[dict[str, Any]], dict[str, int]]:
+        """
+        Membuat daftar rekomendasi program studi dari skor kategori.
+        """
+
+        scores = calculate_interest_scores(cleaned_data)
+        program_pool = load_recommendation_program_pool()
+        ranked_results: list[dict[str, Any]] = []
+
+        for program in program_pool:
+            category = get_program_category(program)
+            base_score = scores.get(category, 0)
+
+            # Program dari bidang pilihan utama mendapat bonus kecil.
+            if category == cleaned_data.get("preferred_field"):
+                base_score += 8
+
+            # Pastikan score tetap enak dibaca untuk user.
+            final_score = max(55, min(98, base_score + 35))
+
+            reason = (
+                f"Cocok karena pilihan minatmu mengarah ke bidang "
+                f"{CATEGORY_LABELS.get(category, category)}. Program ini relevan dengan "
+                f"aktivitas belajar dan tujuan karier yang kamu pilih."
+            )
+
+            ranked_results.append(
+                {
+                    "program_slug": program.get("program_slug", "teknik-informatika"),
+                    "program_name": program.get("program_name", "Teknik Informatika"),
+                    "faculty": program.get("faculty", "Fakultas"),
+                    "campus_name": program.get("campus_name", "Compass Campus"),
+                    "campus_city": program.get("campus_city", "Indonesia"),
+                    "category": category,
+                    "category_label": CATEGORY_LABELS.get(category, category),
+                    "score": final_score,
+                    "reason": reason,
+                }
+            )
+
+        ranked_results.sort(
+            key=lambda item: (
+                item["score"],
+                item["program_name"],
+            ),
+            reverse=True,
+        )
+
+        # Ambil 5 hasil teratas agar tidak membuat user lelah membaca.
+        top_results = ranked_results[:5]
+
+        for index, result in enumerate(top_results, start=1):
+            result["rank_order"] = index
+
+        return top_results, scores
+
+
+    def save_recommendation_result(cleaned_data: dict[str, str], results: list[dict[str, Any]]) -> int:
+        """
+        Menyimpan profil minat dan hasil rekomendasi user ke database.
+        """
+
+        ensure_recommendation_tables()
+
+        with database.get_cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO user_interest_profiles (
+                    user_id,
+                    preferred_field,
+                    favorite_subject,
+                    preferred_activity,
+                    learning_style,
+                    career_goal,
+                    notes
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    int(current_user.id),
+                    cleaned_data["preferred_field"],
+                    cleaned_data["favorite_subject"],
+                    cleaned_data["preferred_activity"],
+                    cleaned_data["learning_style"],
+                    cleaned_data["career_goal"],
+                    cleaned_data.get("notes") or None,
+                ),
+            )
+            profile_id = int(cursor.lastrowid)
+
+            for result in results:
+                cursor.execute(
+                    """
+                    INSERT INTO user_recommendation_results (
+                        profile_id,
+                        user_id,
+                        rank_order,
+                        program_slug,
+                        program_name,
+                        campus_name,
+                        campus_city,
+                        score,
+                        reason
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        profile_id,
+                        int(current_user.id),
+                        int(result["rank_order"]),
+                        result["program_slug"],
+                        result["program_name"],
+                        result["campus_name"],
+                        result.get("campus_city"),
+                        int(result["score"]),
+                        result["reason"],
+                    ),
+                )
+
+        database.commit_db()
+        return profile_id
+
+
+    def load_recommendation_results(profile_id: int | None = None) -> list[dict[str, Any]]:
+        """Mengambil hasil rekomendasi milik user login."""
+
+        try:
+            ensure_recommendation_tables()
+
+            with database.get_cursor(dictionary=True) as cursor:
+                if profile_id is not None:
+                    cursor.execute(
+                        """
+                        SELECT *
+                        FROM user_recommendation_results
+                        WHERE user_id = %s AND profile_id = %s
+                        ORDER BY rank_order ASC
+                        """,
+                        (int(current_user.id), int(profile_id)),
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        SELECT urr.*
+                        FROM user_recommendation_results urr
+                        INNER JOIN (
+                            SELECT MAX(profile_id) AS latest_profile_id
+                            FROM user_recommendation_results
+                            WHERE user_id = %s
+                        ) latest ON latest.latest_profile_id = urr.profile_id
+                        WHERE urr.user_id = %s
+                        ORDER BY urr.rank_order ASC
+                        """,
+                        (int(current_user.id), int(current_user.id)),
+                    )
+
+                return [dict(row) for row in cursor.fetchall()]
+
+        except (Error, RuntimeError):
+            app.logger.exception("Hasil rekomendasi gagal dimuat.")
+            return []
+
+
+    def load_recommendation_history() -> list[dict[str, Any]]:
+        """Mengambil riwayat singkat pemetaan minat user."""
+
+        try:
+            ensure_recommendation_tables()
+
+            with database.get_cursor(dictionary=True) as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        uip.id,
+                        uip.preferred_field,
+                        uip.created_at,
+                        COUNT(urr.id) AS result_count,
+                        MAX(urr.score) AS best_score
+                    FROM user_interest_profiles uip
+                    LEFT JOIN user_recommendation_results urr
+                        ON urr.profile_id = uip.id
+                    WHERE uip.user_id = %s
+                    GROUP BY uip.id, uip.preferred_field, uip.created_at
+                    ORDER BY uip.created_at DESC
+                    LIMIT 5
+                    """,
+                    (int(current_user.id),),
+                )
+                history_rows = [dict(row) for row in cursor.fetchall()]
+
+            for row in history_rows:
+                row["preferred_field_label"] = CATEGORY_LABELS.get(
+                    row.get("preferred_field"),
+                    row.get("preferred_field"),
+                )
+
+            return history_rows
+
+        except (Error, RuntimeError):
+            app.logger.exception("Riwayat rekomendasi gagal dimuat.")
+            return []
+
+
+    def build_recommendation_context(
+        *,
+        form_data: dict[str, str] | None = None,
+        errors: list[str] | None = None,
+        profile_id: int | None = None,
+        scores: dict[str, int] | None = None,
+    ) -> dict[str, Any]:
+        """Menyusun context template recommendation.html."""
+
+        results = load_recommendation_results(profile_id)
+        history = load_recommendation_history()
+
+        score_items = []
+        for key, value in sorted(
+            (scores or calculate_interest_scores({})).items(),
+            key=lambda item: item[1],
+            reverse=True,
+        ):
+            score_items.append(
+                {
+                    "key": key,
+                    "label": CATEGORY_LABELS.get(key, key),
+                    "value": value,
+                }
+            )
+
+        return {
+            "recommendation_options": RECOMMENDATION_OPTIONS,
+            "category_labels": CATEGORY_LABELS,
+            "form_data": form_data or {},
+            "errors": errors or [],
+            "results": results,
+            "history": history,
+            "score_items": score_items,
+            "selected_profile_id": profile_id,
+        }
+
+
+    # =====================================================
+    # 5.10. HELPER BABAK 7 - PROFIL PENGGUNA
+    # =====================================================
+
+    PROFILE_GENDER_OPTIONS = [
+        ("", "Belum dipilih"),
+        ("pria", "Pria"),
+        ("wanita", "Wanita"),
+        ("lainnya", "Lainnya"),
+    ]
+
+    PROFILE_EDUCATION_LEVEL_OPTIONS = [
+        ("", "Belum dipilih"),
+        ("sma", "SMA / MA"),
+        ("smk", "SMK"),
+        ("gap_year", "Gap year"),
+        ("mahasiswa", "Sudah kuliah"),
+        ("lainnya", "Lainnya"),
+    ]
+
+    PROFILE_TARGET_DEGREE_OPTIONS = [
+        ("", "Belum dipilih"),
+        ("d3", "D3"),
+        ("d4", "D4"),
+        ("s1", "S1"),
+        ("s2", "S2"),
+    ]
+
+    PROFILE_CAMPUS_TYPE_OPTIONS = [
+        ("", "Belum dipilih"),
+        ("ptn", "PTN"),
+        ("pts", "PTS"),
+        ("kedinasan", "Kedinasan"),
+        ("fleksibel", "Fleksibel"),
+    ]
+
+    PROFILE_BUDGET_OPTIONS = [
+        ("", "Belum dipilih"),
+        ("rendah", "Di bawah Rp5 juta / semester"),
+        ("menengah", "Rp5 juta sampai Rp10 juta / semester"),
+        ("tinggi", "Di atas Rp10 juta / semester"),
+        ("beasiswa", "Mencari beasiswa"),
+    ]
+
+    PROFILE_LEARNING_OPTIONS = [
+        ("", "Belum dipilih"),
+        ("praktik", "Banyak praktik dan proyek"),
+        ("teori", "Teori dan analisis"),
+        ("visual", "Visual dan desain"),
+        ("diskusi", "Diskusi dan presentasi"),
+        ("campuran", "Campuran"),
+    ]
+
+    def ensure_profile_tables() -> None:
+        """
+        Membuat tabel profil pengguna untuk Babak 7.
+
+        Data dasar login tetap berada di tabel users.
+        Data tambahan seperti asal sekolah, kota, minat, dan preferensi
+        disimpan di user_profiles agar struktur akun tetap rapi.
+        """
+
+        with database.get_cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_profiles (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    user_id INT UNSIGNED NOT NULL,
+                    phone_number VARCHAR(30) DEFAULT NULL,
+                    date_of_birth DATE DEFAULT NULL,
+                    gender ENUM('pria','wanita','lainnya') DEFAULT NULL,
+                    province VARCHAR(100) DEFAULT NULL,
+                    city VARCHAR(100) DEFAULT NULL,
+                    address VARCHAR(255) DEFAULT NULL,
+                    school_origin VARCHAR(150) DEFAULT NULL,
+                    graduation_year SMALLINT UNSIGNED DEFAULT NULL,
+                    education_level VARCHAR(40) DEFAULT NULL,
+                    target_degree VARCHAR(20) DEFAULT NULL,
+                    target_study_field VARCHAR(120) DEFAULT NULL,
+                    preferred_campus_type VARCHAR(40) DEFAULT NULL,
+                    preferred_location VARCHAR(120) DEFAULT NULL,
+                    budget_range VARCHAR(60) DEFAULT NULL,
+                    learning_preference VARCHAR(60) DEFAULT NULL,
+                    career_goal VARCHAR(180) DEFAULT NULL,
+                    strongest_skill VARCHAR(180) DEFAULT NULL,
+                    favorite_subjects VARCHAR(180) DEFAULT NULL,
+                    hobbies VARCHAR(180) DEFAULT NULL,
+                    bio TEXT DEFAULT NULL,
+                    notification_email TINYINT(1) NOT NULL DEFAULT 1,
+                    notification_ticket TINYINT(1) NOT NULL DEFAULT 1,
+                    allow_recommendation_history TINYINT(1) NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY uq_user_profiles_user_id (user_id),
+                    INDEX idx_user_profiles_city (city),
+                    INDEX idx_user_profiles_target_degree (target_degree),
+                    CONSTRAINT fk_user_profiles_user
+                        FOREIGN KEY (user_id)
+                        REFERENCES users(id)
+                        ON UPDATE CASCADE
+                        ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+                """
+            )
+
+        database.commit_db()
+
+
+    def get_default_profile_form() -> dict[str, str]:
+        """Menghasilkan struktur form kosong agar template aman dibuka."""
+
+        return {
+            "full_name": getattr(current_user, "full_name", ""),
+            "email": getattr(current_user, "email", ""),
+            "phone_number": "",
+            "date_of_birth": "",
+            "gender": "",
+            "province": "",
+            "city": "",
+            "address": "",
+            "school_origin": "",
+            "graduation_year": "",
+            "education_level": "",
+            "target_degree": "",
+            "target_study_field": "",
+            "preferred_campus_type": "",
+            "preferred_location": "",
+            "budget_range": "",
+            "learning_preference": "",
+            "career_goal": "",
+            "strongest_skill": "",
+            "favorite_subjects": "",
+            "hobbies": "",
+            "bio": "",
+            "notification_email": "1",
+            "notification_ticket": "1",
+            "allow_recommendation_history": "1",
+        }
+
+
+    def sanitize_profile_text(value: Any, max_length: int) -> str:
+        """Membersihkan input teks profil dengan batas panjang sederhana."""
+
+        cleaned_value = str(value or "").strip()
+        return cleaned_value[:max_length]
+
+
+    def load_profile_row() -> dict[str, Any]:
+        """
+        Mengambil profil tambahan user.
+
+        Jika user belum punya profil tambahan, sistem membuat baris kosong.
+        Dengan cara ini halaman profil selalu punya data yang konsisten.
+        """
+
+        ensure_profile_tables()
+
+        with database.get_cursor(dictionary=True) as cursor:
+            cursor.execute(
+                """
+                SELECT *
+                FROM user_profiles
+                WHERE user_id = %s
+                LIMIT 1
+                """,
+                (int(current_user.id),),
+            )
+            profile_row = cursor.fetchone()
+
+        if profile_row:
+            return dict(profile_row)
+
+        with database.get_cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO user_profiles (user_id)
+                VALUES (%s)
+                """,
+                (int(current_user.id),),
+            )
+        database.commit_db()
+
+        with database.get_cursor(dictionary=True) as cursor:
+            cursor.execute(
+                """
+                SELECT *
+                FROM user_profiles
+                WHERE user_id = %s
+                LIMIT 1
+                """,
+                (int(current_user.id),),
+            )
+            created_row = cursor.fetchone()
+
+        return dict(created_row or {})
+
+
+    def profile_row_to_form(profile_row: dict[str, Any]) -> dict[str, str]:
+        """Mengubah row database menjadi form_data untuk template."""
+
+        form_data = get_default_profile_form()
+
+        for key in form_data:
+            if key in {"full_name", "email"}:
+                continue
+
+            value = profile_row.get(key)
+
+            if value is None:
+                form_data[key] = ""
+            elif hasattr(value, "strftime"):
+                form_data[key] = value.strftime("%Y-%m-%d")
+            else:
+                form_data[key] = str(value)
+
+        form_data["full_name"] = str(getattr(current_user, "full_name", ""))
+        form_data["email"] = str(getattr(current_user, "email", ""))
+
+        for flag_key in [
+            "notification_email",
+            "notification_ticket",
+            "allow_recommendation_history",
+        ]:
+            form_data[flag_key] = "1" if int(profile_row.get(flag_key) or 0) == 1 else "0"
+
+        return form_data
+
+
+    def calculate_profile_completion(form_data: dict[str, str]) -> int:
+        """Menghitung persentase kelengkapan profil secara sederhana."""
+
+        important_keys = [
+            "full_name",
+            "phone_number",
+            "city",
+            "school_origin",
+            "education_level",
+            "target_degree",
+            "target_study_field",
+            "preferred_location",
+            "learning_preference",
+            "career_goal",
+            "favorite_subjects",
+            "bio",
+        ]
+
+        filled_count = sum(1 for key in important_keys if str(form_data.get(key, "")).strip())
+        return round((filled_count / len(important_keys)) * 100)
+
+
+    def load_profile_activity_summary() -> dict[str, Any]:
+        """Mengambil ringkasan aktivitas user dari tiket dan rekomendasi."""
+
+        summary = {
+            "ticket_total": 0,
+            "ticket_active": 0,
+            "ticket_closed": 0,
+            "recommendation_total": 0,
+            "latest_recommendation_label": "Belum ada",
+            "saved_programs": 0,
+        }
+
+        try:
+            ensure_help_desk_tables()
+            with database.get_cursor(dictionary=True) as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS total,
+                        COALESCE(SUM(status != 'selesai'), 0) AS active_total,
+                        COALESCE(SUM(status = 'selesai'), 0) AS closed_total
+                    FROM help_tickets
+                    WHERE user_id = %s
+                    """,
+                    (int(current_user.id),),
+                )
+                row = cursor.fetchone() or {}
+
+            summary["ticket_total"] = int(row.get("total") or 0)
+            summary["ticket_active"] = int(row.get("active_total") or 0)
+            summary["ticket_closed"] = int(row.get("closed_total") or 0)
+
+        except (Error, RuntimeError):
+            app.logger.exception("Ringkasan tiket profil gagal dimuat.")
+
+        try:
+            ensure_recommendation_tables()
+            with database.get_cursor(dictionary=True) as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS total,
+                        MAX(created_at) AS latest_created_at
+                    FROM user_interest_profiles
+                    WHERE user_id = %s
+                    """,
+                    (int(current_user.id),),
+                )
+                row = cursor.fetchone() or {}
+
+            summary["recommendation_total"] = int(row.get("total") or 0)
+            latest_created_at = row.get("latest_created_at")
+
+            if hasattr(latest_created_at, "strftime"):
+                summary["latest_recommendation_label"] = latest_created_at.strftime("%d/%m/%Y %H:%M")
+
+        except (Error, RuntimeError):
+            app.logger.exception("Ringkasan rekomendasi profil gagal dimuat.")
+
+        return summary
+
+
+    def load_profile_recent_tickets() -> list[dict[str, Any]]:
+        """Mengambil beberapa tiket terbaru untuk halaman profil."""
+
+        try:
+            ensure_help_desk_tables()
+            with database.get_cursor(dictionary=True) as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        id,
+                        ticket_code,
+                        category,
+                        subject,
+                        priority,
+                        status,
+                        created_at,
+                        updated_at
+                    FROM help_tickets
+                    WHERE user_id = %s
+                    ORDER BY updated_at DESC, created_at DESC
+                    LIMIT 4
+                    """,
+                    (int(current_user.id),),
+                )
+                rows = [dict(row) for row in cursor.fetchall()]
+
+            return [enrich_ticket_row(row) for row in rows]
+
+        except (Error, RuntimeError):
+            app.logger.exception("Tiket terbaru profil gagal dimuat.")
+            return []
+
+
+    def validate_profile_update_form(form_data: Any) -> tuple[dict[str, str], list[str]]:
+        """Validasi form profil utama."""
+
+        cleaned = get_default_profile_form()
+        errors: list[str] = []
+
+        cleaned["full_name"] = sanitize_profile_text(form_data.get("full_name"), 100)
+        cleaned["phone_number"] = sanitize_profile_text(form_data.get("phone_number"), 30)
+        cleaned["date_of_birth"] = sanitize_profile_text(form_data.get("date_of_birth"), 10)
+        cleaned["gender"] = sanitize_profile_text(form_data.get("gender"), 20)
+        cleaned["province"] = sanitize_profile_text(form_data.get("province"), 100)
+        cleaned["city"] = sanitize_profile_text(form_data.get("city"), 100)
+        cleaned["address"] = sanitize_profile_text(form_data.get("address"), 255)
+        cleaned["school_origin"] = sanitize_profile_text(form_data.get("school_origin"), 150)
+        cleaned["graduation_year"] = sanitize_profile_text(form_data.get("graduation_year"), 4)
+        cleaned["education_level"] = sanitize_profile_text(form_data.get("education_level"), 40)
+        cleaned["target_degree"] = sanitize_profile_text(form_data.get("target_degree"), 20)
+        cleaned["target_study_field"] = sanitize_profile_text(form_data.get("target_study_field"), 120)
+        cleaned["preferred_campus_type"] = sanitize_profile_text(form_data.get("preferred_campus_type"), 40)
+        cleaned["preferred_location"] = sanitize_profile_text(form_data.get("preferred_location"), 120)
+        cleaned["budget_range"] = sanitize_profile_text(form_data.get("budget_range"), 60)
+        cleaned["learning_preference"] = sanitize_profile_text(form_data.get("learning_preference"), 60)
+        cleaned["career_goal"] = sanitize_profile_text(form_data.get("career_goal"), 180)
+        cleaned["strongest_skill"] = sanitize_profile_text(form_data.get("strongest_skill"), 180)
+        cleaned["favorite_subjects"] = sanitize_profile_text(form_data.get("favorite_subjects"), 180)
+        cleaned["hobbies"] = sanitize_profile_text(form_data.get("hobbies"), 180)
+        cleaned["bio"] = sanitize_profile_text(form_data.get("bio"), 700)
+        cleaned["notification_email"] = "1" if form_data.get("notification_email") == "1" else "0"
+        cleaned["notification_ticket"] = "1" if form_data.get("notification_ticket") == "1" else "0"
+        cleaned["allow_recommendation_history"] = "1" if form_data.get("allow_recommendation_history") == "1" else "0"
+
+        if len(cleaned["full_name"]) < 3:
+            errors.append("Nama lengkap minimal 3 karakter.")
+
+        if cleaned["gender"] and cleaned["gender"] not in {"pria", "wanita", "lainnya"}:
+            errors.append("Pilihan gender tidak valid.")
+
+        if cleaned["graduation_year"]:
+            if not cleaned["graduation_year"].isdigit():
+                errors.append("Tahun lulus harus berupa angka.")
+            else:
+                graduation_year = int(cleaned["graduation_year"])
+                if graduation_year < 1990 or graduation_year > 2100:
+                    errors.append("Tahun lulus berada di luar rentang yang wajar.")
+
+        return cleaned, errors
+
+
+    def save_profile_update(cleaned: dict[str, str]) -> None:
+        """Menyimpan perubahan profil ke users dan user_profiles."""
+
+        ensure_profile_tables()
+
+        graduation_year = int(cleaned["graduation_year"]) if cleaned["graduation_year"].isdigit() else None
+
+        with database.get_cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE users
+                SET full_name = %s
+                WHERE id = %s
+                """,
+                (
+                    cleaned["full_name"],
+                    int(current_user.id),
+                ),
+            )
+
+            cursor.execute(
+                """
+                INSERT INTO user_profiles (
+                    user_id,
+                    phone_number,
+                    date_of_birth,
+                    gender,
+                    province,
+                    city,
+                    address,
+                    school_origin,
+                    graduation_year,
+                    education_level,
+                    target_degree,
+                    target_study_field,
+                    preferred_campus_type,
+                    preferred_location,
+                    budget_range,
+                    learning_preference,
+                    career_goal,
+                    strongest_skill,
+                    favorite_subjects,
+                    hobbies,
+                    bio,
+                    notification_email,
+                    notification_ticket,
+                    allow_recommendation_history
+                ) VALUES (
+                    %s, %s, NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''),
+                    NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''), %s,
+                    NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''),
+                    NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''),
+                    NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''), NULLIF(%s, ''),
+                    %s, %s, %s
+                )
+                ON DUPLICATE KEY UPDATE
+                    phone_number = VALUES(phone_number),
+                    date_of_birth = VALUES(date_of_birth),
+                    gender = VALUES(gender),
+                    province = VALUES(province),
+                    city = VALUES(city),
+                    address = VALUES(address),
+                    school_origin = VALUES(school_origin),
+                    graduation_year = VALUES(graduation_year),
+                    education_level = VALUES(education_level),
+                    target_degree = VALUES(target_degree),
+                    target_study_field = VALUES(target_study_field),
+                    preferred_campus_type = VALUES(preferred_campus_type),
+                    preferred_location = VALUES(preferred_location),
+                    budget_range = VALUES(budget_range),
+                    learning_preference = VALUES(learning_preference),
+                    career_goal = VALUES(career_goal),
+                    strongest_skill = VALUES(strongest_skill),
+                    favorite_subjects = VALUES(favorite_subjects),
+                    hobbies = VALUES(hobbies),
+                    bio = VALUES(bio),
+                    notification_email = VALUES(notification_email),
+                    notification_ticket = VALUES(notification_ticket),
+                    allow_recommendation_history = VALUES(allow_recommendation_history),
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    int(current_user.id),
+                    cleaned["phone_number"] or None,
+                    cleaned["date_of_birth"],
+                    cleaned["gender"],
+                    cleaned["province"],
+                    cleaned["city"],
+                    cleaned["address"],
+                    cleaned["school_origin"],
+                    graduation_year,
+                    cleaned["education_level"],
+                    cleaned["target_degree"],
+                    cleaned["target_study_field"],
+                    cleaned["preferred_campus_type"],
+                    cleaned["preferred_location"],
+                    cleaned["budget_range"],
+                    cleaned["learning_preference"],
+                    cleaned["career_goal"],
+                    cleaned["strongest_skill"],
+                    cleaned["favorite_subjects"],
+                    cleaned["hobbies"],
+                    cleaned["bio"],
+                    int(cleaned["notification_email"]),
+                    int(cleaned["notification_ticket"]),
+                    int(cleaned["allow_recommendation_history"]),
+                ),
+            )
+
+        database.commit_db()
+
+
+    def validate_profile_password_form(form_data: Any) -> tuple[dict[str, str], list[str]]:
+        """Validasi form keamanan akun."""
+
+        cleaned = {
+            "current_password": str(form_data.get("current_password") or ""),
+            "new_password": str(form_data.get("new_password") or ""),
+            "confirm_password": str(form_data.get("confirm_password") or ""),
+        }
+        errors: list[str] = []
+
+        if not cleaned["current_password"]:
+            errors.append("Kata sandi saat ini wajib diisi.")
+
+        if len(cleaned["new_password"]) < 8:
+            errors.append("Kata sandi baru minimal 8 karakter.")
+
+        if cleaned["new_password"] != cleaned["confirm_password"]:
+            errors.append("Konfirmasi kata sandi baru belum sama.")
+
+        if cleaned["current_password"] and cleaned["new_password"] and cleaned["current_password"] == cleaned["new_password"]:
+            errors.append("Kata sandi baru tidak boleh sama dengan kata sandi lama.")
+
+        return cleaned, errors
+
+
+    def save_profile_password(cleaned: dict[str, str]) -> None:
+        """Mengubah kata sandi user dari halaman profil."""
+
+        with database.get_cursor(dictionary=True) as cursor:
+            cursor.execute(
+                """
+                SELECT password_hash
+                FROM users
+                WHERE id = %s
+                LIMIT 1
+                """,
+                (int(current_user.id),),
+            )
+            row = cursor.fetchone()
+
+        if not row or not check_password_hash(str(row["password_hash"]), cleaned["current_password"]):
+            raise ValueError("Kata sandi saat ini tidak sesuai.")
+
+        new_password_hash = generate_password_hash(cleaned["new_password"])
+
+        with database.get_cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE users
+                SET password_hash = %s
+                WHERE id = %s
+                """,
+                (
+                    new_password_hash,
+                    int(current_user.id),
+                ),
+            )
+
+        database.commit_db()
+
+
+    def build_profile_context(
+        *,
+        form_data: dict[str, str] | None = None,
+        errors: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Menyusun semua data yang dibutuhkan profile.html."""
+
+        profile_row = load_profile_row()
+        active_form_data = form_data or profile_row_to_form(profile_row)
+        completion = calculate_profile_completion(active_form_data)
+
+        return {
+            "form_data": active_form_data,
+            "errors": errors or [],
+            "profile_completion": completion,
+            "activity_summary": load_profile_activity_summary(),
+            "recent_tickets": load_profile_recent_tickets(),
+            "recommendation_history": load_recommendation_history(),
+            "gender_options": PROFILE_GENDER_OPTIONS,
+            "education_level_options": PROFILE_EDUCATION_LEVEL_OPTIONS,
+            "target_degree_options": PROFILE_TARGET_DEGREE_OPTIONS,
+            "campus_type_options": PROFILE_CAMPUS_TYPE_OPTIONS,
+            "budget_options": PROFILE_BUDGET_OPTIONS,
+            "learning_options": PROFILE_LEARNING_OPTIONS,
+        }
+
+
     # =====================================================
     # 6.0. ROUTE BABAK 5 - DETAIL KAMPUS DAN PROGRAM STUDI
     # =====================================================
@@ -2386,6 +3563,206 @@ def create_app(
         return render_template(
             "campus-detail.html",
             **load_campus_detail_context(program_slug),
+        )
+
+
+
+    # =====================================================
+    # 6.1. ROUTE BABAK 6 - PEMETAAN MINAT DAN REKOMENDASI
+    # =====================================================
+
+    @app.route("/recommendation", methods=["GET", "POST"])
+    @login_required
+    def recommendation():
+        """
+        Menampilkan dan memproses pemetaan minat.
+
+        Halaman ini menjadi modul Babak 6. User mengisi beberapa pilihan,
+        sistem menghitung kecocokan secara rule-based, lalu menampilkan
+        3-5 program studi yang paling relevan.
+        """
+
+        if request.method == "POST":
+            cleaned_data, errors = validate_recommendation_form(request.form)
+
+            if errors:
+                return render_template(
+                    "recommendation.html",
+                    **build_recommendation_context(
+                        form_data=cleaned_data,
+                        errors=errors,
+                    ),
+                )
+
+            try:
+                results, scores = build_recommendation_results(cleaned_data)
+                profile_id = save_recommendation_result(cleaned_data, results)
+
+                flash(
+                    "Pemetaan minat berhasil dibuat. Lihat hasil rekomendasi di bawah.",
+                    "success",
+                )
+
+                return redirect(
+                    url_for("recommendation", result_id=profile_id) + "#hasil-rekomendasi"
+                )
+
+            except (Error, RuntimeError):
+                database.rollback_db()
+                app.logger.exception("Pemetaan minat gagal diproses.")
+
+                return render_template(
+                    "recommendation.html",
+                    **build_recommendation_context(
+                        form_data=cleaned_data,
+                        errors=[
+                            "Pemetaan minat belum bisa diproses. Silakan coba lagi beberapa saat lagi."
+                        ],
+                    ),
+                )
+
+        result_id_raw = request.args.get("result_id", "").strip()
+        result_id = int(result_id_raw) if result_id_raw.isdigit() else None
+
+        return render_template(
+            "recommendation.html",
+            **build_recommendation_context(
+                profile_id=result_id,
+            ),
+        )
+
+
+    @app.get("/recommendations")
+    @login_required
+    def recommendations_legacy():
+        """Alias agar link /recommendations tetap aman."""
+
+        return redirect(
+            url_for("recommendation")
+        )
+
+
+    @app.get("/pemetaan-minat")
+    @login_required
+    def interest_mapping_legacy():
+        """Alias agar istilah lama /pemetaan-minat tetap aman."""
+
+        return redirect(
+            url_for("recommendation")
+        )
+
+
+
+    # =====================================================
+    # 6.2. ROUTE BABAK 7 - PROFIL PENGGUNA
+    # =====================================================
+
+    @app.route("/profile", methods=["GET", "POST"])
+    @login_required
+    def profile():
+        """
+        Menampilkan dan memproses halaman profil pengguna.
+
+        Babak 7 membuat akun lebih realistis:
+        - data diri,
+        - asal sekolah,
+        - preferensi kampus,
+        - minat akademik,
+        - preferensi notifikasi,
+        - dan keamanan password.
+        """
+
+        if request.method == "POST":
+            profile_action = str(request.form.get("profile_action") or "profile").strip()
+
+            if profile_action == "security":
+                cleaned_password, password_errors = validate_profile_password_form(request.form)
+
+                if password_errors:
+                    return render_template(
+                        "profile.html",
+                        **build_profile_context(errors=password_errors),
+                    )
+
+                try:
+                    save_profile_password(cleaned_password)
+                    flash("Kata sandi berhasil diperbarui.", "success")
+
+                    return redirect(
+                        url_for("profile") + "#keamanan-akun"
+                    )
+
+                except ValueError as error:
+                    return render_template(
+                        "profile.html",
+                        **build_profile_context(errors=[str(error)]),
+                    )
+
+                except (Error, RuntimeError):
+                    database.rollback_db()
+                    app.logger.exception("Perubahan kata sandi dari profil gagal.")
+
+                    return render_template(
+                        "profile.html",
+                        **build_profile_context(
+                            errors=["Kata sandi belum bisa diperbarui. Silakan coba lagi beberapa saat lagi."]
+                        ),
+                    )
+
+            cleaned_profile, profile_errors = validate_profile_update_form(request.form)
+
+            if profile_errors:
+                return render_template(
+                    "profile.html",
+                    **build_profile_context(
+                        form_data=cleaned_profile,
+                        errors=profile_errors,
+                    ),
+                )
+
+            try:
+                save_profile_update(cleaned_profile)
+                flash("Profil berhasil diperbarui.", "success")
+
+                return redirect(
+                    url_for("profile") + "#profil-saya"
+                )
+
+            except (Error, RuntimeError):
+                database.rollback_db()
+                app.logger.exception("Profil pengguna gagal diperbarui.")
+
+                return render_template(
+                    "profile.html",
+                    **build_profile_context(
+                        form_data=cleaned_profile,
+                        errors=["Profil belum bisa disimpan. Silakan coba lagi beberapa saat lagi."],
+                    ),
+                )
+
+        return render_template(
+            "profile.html",
+            **build_profile_context(),
+        )
+
+
+    @app.get("/account")
+    @login_required
+    def account_legacy():
+        """Alias aman untuk URL akun versi umum."""
+
+        return redirect(
+            url_for("profile")
+        )
+
+
+    @app.get("/akun-saya")
+    @login_required
+    def akun_saya_legacy():
+        """Alias aman untuk URL berbahasa Indonesia."""
+
+        return redirect(
+            url_for("profile")
         )
 
 
