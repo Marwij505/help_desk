@@ -11,7 +11,7 @@ Status proyek: Dalam tahap pengembangan (MASIH LAMA DAN RIBET tapi cocok untuk p
 # Step by step cara ngerun web ini (Kalau step ini gagal maka tanyalah AI)
 1.gunakan dan nyalakan xampp atau sejenisnya yang ada mysql
 
-2.make sure interpreter kalian python versi 3.14.5 atau versi yang bisa menampung library di step 3
+2.make sure interpreter kalian python versi 3.14.5 atau versi yang bisa menampung library di step 6
 
 3.bikin database sesuai dengan keinginan klean masing-masing (rekomendasi gw help_desk_comcam)
 
