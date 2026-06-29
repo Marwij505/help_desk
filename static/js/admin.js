@@ -45,6 +45,33 @@
             submitButton.textContent = "Mengirim...";
         });
     });
+
+
+    // Menjaga posisi admin tetap berada di filter atau daftar tiket
+    // setelah submit filter, update status, atau kirim balasan.
+    function scrollToHashTarget() {
+        if (!window.location.hash) {
+            return;
+        }
+
+        const target = document.getElementById(
+            window.location.hash.replace("#", "")
+        );
+
+        if (!target) {
+            return;
+        }
+
+        window.setTimeout(function () {
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }, 80);
+    }
+
+    scrollToHashTarget();
+
 })();
 
 

@@ -49,6 +49,32 @@
             });
         }, 5200);
     }
+
+
+    // Jika URL memiliki anchor, tetap fokus ke bagian tersebut setelah reload.
+    function scrollToHashTarget() {
+        if (!window.location.hash) {
+            return;
+        }
+
+        const target = document.getElementById(
+            window.location.hash.replace("#", "")
+        );
+
+        if (!target) {
+            return;
+        }
+
+        window.setTimeout(function () {
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }, 80);
+    }
+
+    scrollToHashTarget();
+
 })();
 
 

@@ -632,17 +632,17 @@
 
                                 <div class="mini-recommendation-list">
 
-                                    <a href="{{ url_for('search', q='Teknik Informatika') }}">
+                                    <a href="{{ url_for('campus_detail_slug', program_slug='teknik-informatika') }}">
                                         <strong>Teknik Informatika</strong>
                                         <small>Teknologi, data, software</small>
                                     </a>
 
-                                    <a href="{{ url_for('search', q='Sistem Informasi') }}">
+                                    <a href="{{ url_for('campus_detail_slug', program_slug='sistem-informasi') }}">
                                         <strong>Sistem Informasi</strong>
                                         <small>Bisnis, teknologi, sistem</small>
                                     </a>
 
-                                    <a href="{{ url_for('search', q='Manajemen') }}">
+                                    <a href="{{ url_for('campus_detail_slug', program_slug='manajemen') }}">
                                         <strong>Manajemen</strong>
                                         <small>Organisasi, bisnis, strategi</small>
                                     </a>
@@ -947,6 +947,9 @@
                         role="search"
                     >
 
+                        <!-- Menjaga hasil pencarian tetap berada di section Program Studi -->
+                        <input type="hidden" name="focus" value="program-studi">
+
                         <div class="search-input-wrapper">
 
                             <svg aria-hidden="true">
@@ -981,19 +984,19 @@
 
                         <span>Pencarian populer:</span>
 
-                        <a href="{{ url_for('search', q='Teknik Informatika') }}">
+                        <a href="{{ url_for('campus_detail_slug', program_slug='teknik-informatika') }}">
                             Teknik Informatika
                         </a>
 
-                        <a href="{{ url_for('search', q='Sistem Informasi') }}">
+                        <a href="{{ url_for('campus_detail_slug', program_slug='sistem-informasi') }}">
                             Sistem Informasi
                         </a>
 
-                        <a href="{{ url_for('search', q='Manajemen') }}">
+                        <a href="{{ url_for('campus_detail_slug', program_slug='manajemen') }}">
                             Manajemen
                         </a>
 
-                        <a href="{{ url_for('search', q='Desain Komunikasi Visual') }}">
+                        <a href="{{ url_for('campus_detail_slug', program_slug='desain-komunikasi-visual') }}">
                             Desain Komunikasi Visual
                         </a>
 
@@ -1001,7 +1004,7 @@
 
                     <!-- Pesan notifikasi jika pencarian tidak ditemukan -->
                     {% if search_notice %}
-                        <div class="search-notice" role="status">
+                        <div class="search-notice" id="search-notice" role="status" tabindex="-1">
                             {{ search_notice }}
                         </div>
                     {% endif %}
@@ -1047,7 +1050,7 @@
                 <div class="study-category-grid">
 
                     <a
-                        href="{{ url_for('search', q='Komputer dan Teknologi') }}"
+                        href="{{ url_for('search', q='Komputer dan Teknologi', focus='program-studi') }}#program-studi"
                         class="study-category-card"
                     >
                         <div class="category-icon">💻</div>
@@ -1063,7 +1066,7 @@
 
 
                     <a
-                        href="{{ url_for('search', q='Ekonomi dan Bisnis') }}"
+                        href="{{ url_for('search', q='Ekonomi dan Bisnis', focus='program-studi') }}#program-studi"
                         class="study-category-card"
                     >
                         <div class="category-icon">📊</div>
@@ -1079,7 +1082,7 @@
 
 
                     <a
-                        href="{{ url_for('search', q='Kesehatan') }}"
+                        href="{{ url_for('search', q='Kesehatan', focus='program-studi') }}#program-studi"
                         class="study-category-card"
                     >
                         <div class="category-icon">🩺</div>
@@ -1095,7 +1098,7 @@
 
 
                     <a
-                        href="{{ url_for('search', q='Teknik dan Rekayasa') }}"
+                        href="{{ url_for('search', q='Teknik dan Rekayasa', focus='program-studi') }}#program-studi"
                         class="study-category-card"
                     >
                         <div class="category-icon">⚙️</div>
@@ -1111,7 +1114,7 @@
 
 
                     <a
-                        href="{{ url_for('search', q='Sosial dan Komunikasi') }}"
+                        href="{{ url_for('search', q='Sosial dan Komunikasi', focus='program-studi') }}#program-studi"
                         class="study-category-card"
                     >
                         <div class="category-icon">🤝</div>
@@ -1127,7 +1130,7 @@
 
 
                     <a
-                        href="{{ url_for('search', q='Desain dan Seni') }}"
+                        href="{{ url_for('search', q='Desain dan Seni', focus='program-studi') }}#program-studi"
                         class="study-category-card"
                     >
                         <div class="category-icon">🎨</div>
@@ -1684,6 +1687,9 @@
                 method="GET"
                 role="search"
             >
+
+                <!-- Menjaga hasil pencarian tetap berada di section Program Studi -->
+                <input type="hidden" name="focus" value="program-studi">
 
                 <svg aria-hidden="true">
                     <use href="#icon-search"></use>

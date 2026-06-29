@@ -857,6 +857,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =====================================================
+       12B. MENJAGA POSISI SETELAH FORM DIPROSES
+       ===================================================== */
+
+    /**
+     * Scroll otomatis ke section yang diminta oleh URL.
+     * Dipakai agar pencarian yang gagal tetap berada di Program Studi,
+     * bukan kembali ke bagian paling atas homepage.
+     */
+    function scrollToRequestedSection() {
+        const parameters = new URLSearchParams(window.location.search);
+
+        const focusFromQuery = parameters.get("focus") || "";
+
+        const focusFromHash = window.location.hash
+            ? window.location.hash.replace("#", "")
+            : "";
+
+        const targetId = focusFromHash || focusFromQuery;
+
+        if (!targetId) {
+            return;
+        }
+
+        const targetElement = document.getElementById(targetId);
+
+        if (!targetElement) {
+            return;
+        }
+
+        window.setTimeout(function () {
+            targetElement.scrollIntoView({
+                behavior: prefersReducedMotion ? "auto" : "smooth",
+                block: "start"
+            });
+
+            if (targetElement.id) {
+                setActiveNavigation(targetElement.id);
+            }
+        }, 80);
+    }
+
+    scrollToRequestedSection();
+
+
+    /* =====================================================
        13. FAQ INTERAKTIF
        ===================================================== */
 

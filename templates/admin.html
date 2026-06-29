@@ -167,7 +167,7 @@
                      FILTER ADMIN
                      Filter memakai method GET agar hasil mudah di-refresh.
                      ===================================================== -->
-                <form class="admin-filter-card" method="GET" action="{{ url_for('admin_panel') }}">
+                <form class="admin-filter-card" id="admin-filter" method="GET" action="{{ url_for('admin_panel') }}#admin-tickets">
                     <div class="filter-heading">
                         <span>Filter Tiket</span>
                         <h2>Cari tiket yang perlu ditangani.</h2>
@@ -229,7 +229,7 @@
                             Terapkan Filter
                             <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
                         </button>
-                        <a href="{{ url_for('admin_panel') }}" class="button-secondary">
+                        <a href="{{ url_for('admin_panel') }}#admin-filter" class="button-secondary">
                             Reset
                         </a>
                     </div>
@@ -239,7 +239,7 @@
                 <!-- =====================================================
                      DAFTAR TIKET ADMIN
                      ===================================================== -->
-                <section class="admin-ticket-list" aria-labelledby="ticket-list-title">
+                <section class="admin-ticket-list" id="admin-tickets" aria-labelledby="ticket-list-title">
                     <div class="list-heading">
                         <span>Daftar Tiket</span>
                         <h2 id="ticket-list-title">Tiket pengguna terbaru.</h2>

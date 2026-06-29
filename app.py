@@ -211,7 +211,7 @@ def create_app(
             )
 
             return redirect(
-                url_for("ticket")
+                url_for("ticket") + "#ticket-list"
             )
 
         if request.path.startswith("/admin"):
@@ -221,7 +221,7 @@ def create_app(
             )
 
             return redirect(
-                url_for("admin_panel")
+                url_for("admin_panel") + "#admin-tickets"
             )
 
         template_by_path = {
@@ -522,6 +522,7 @@ def create_app(
         *,
         search_query: str = "",
         search_notice: str | None = None,
+        search_focus: str = "",
     ) -> dict[str, Any]:
         """
         Menyatukan data ringkas yang dibutuhkan index.html.
@@ -535,6 +536,7 @@ def create_app(
         context = {
             "search_query": search_query,
             "search_notice": search_notice,
+            "search_focus": search_focus,
         }
 
         context.update(
@@ -542,6 +544,1258 @@ def create_app(
         )
 
         return context
+
+
+    # =====================================================
+    # 4.4. HELPER BABAK 5 - DATA KAMPUS DAN DETAIL PROGRAM STUDI
+    # =====================================================
+
+    DEFAULT_PROGRAM_SLUG = "teknik-informatika"
+
+    FALLBACK_CAMPUS_DATA = {
+        "campus_name": "Universitas Esa Unggul",
+        "campus_slug": "universitas-esa-unggul",
+        "campus_city": "Bekasi",
+        "campus_address": "Harapan Indah, Bekasi",
+        "campus_type": "Perguruan Tinggi Swasta",
+        "campus_website": "https://www.esaunggul.ac.id",
+        "campus_description": (
+            "Universitas Esa Unggul adalah kampus swasta yang menyediakan "
+            "berbagai pilihan program studi untuk calon mahasiswa baru."
+        ),
+        "program_name": "Teknik Informatika",
+        "program_slug": "teknik-informatika",
+        "faculty": "Fakultas Ilmu Komputer",
+        "degree": "S1",
+        "accreditation": "Baik Sekali",
+        "learning_mode": "Reguler",
+        "duration": "8 Semester",
+        "tuition_range": "Informasi biaya mengikuti kebijakan kampus",
+        "summary": (
+            "Teknik Informatika cocok untuk pengguna yang tertarik pada "
+            "pemrograman, rekayasa perangkat lunak, kecerdasan buatan, data, "
+            "dan pengembangan sistem digital."
+        ),
+        "curriculum_points": [
+            "Dasar pemrograman dan struktur data",
+            "Basis data dan analisis sistem",
+            "Rekayasa perangkat lunak",
+            "Jaringan komputer dan keamanan",
+            "Kecerdasan buatan dan data science",
+        ],
+        "career_paths": [
+            "Software Developer",
+            "Backend Developer",
+            "Data Analyst",
+            "AI Engineer",
+            "System Analyst",
+        ],
+        "skills": [
+            "Problem solving",
+            "Logika algoritma",
+            "Pemrograman",
+            "Analisis data",
+            "Kolaborasi tim",
+        ],
+        "facilities": [
+            "Laboratorium komputer",
+            "Akses pembelajaran digital",
+            "Dukungan dosen dan konselor akademik",
+            "Kegiatan pengembangan minat mahasiswa",
+        ],
+    }
+
+    def split_semicolon_text(value: Any) -> list[str]:
+        """
+        Mengubah teks database berbasis tanda titik koma menjadi list.
+
+        Format ini dipilih agar schema tetap sederhana dan mudah dibaca
+        lewat phpMyAdmin tanpa membutuhkan kolom JSON.
+        """
+
+        return [
+            item.strip()
+            for item in str(value or "").split(";")
+            if item.strip()
+        ]
+
+
+    def ensure_campus_tables() -> None:
+        """
+        Membuat tabel kampus dan program studi untuk Babak 5.
+
+        Fungsi ini aman dipanggil berulang karena memakai
+        CREATE TABLE IF NOT EXISTS dan INSERT IGNORE.
+        Jika schema-5.sql sudah dijalankan manual, fungsi ini tetap aman.
+        """
+
+        with database.get_cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS campuses (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    slug VARCHAR(120) NOT NULL,
+                    campus_name VARCHAR(160) NOT NULL,
+                    city VARCHAR(100) NOT NULL,
+                    address VARCHAR(255) DEFAULT NULL,
+                    website VARCHAR(180) DEFAULT NULL,
+                    campus_type VARCHAR(100) DEFAULT NULL,
+                    description TEXT DEFAULT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY uq_campuses_slug (slug)
+                ) ENGINE=InnoDB
+                  DEFAULT CHARACTER SET utf8mb4
+                  COLLATE utf8mb4_unicode_ci
+                """
+            )
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS study_programs (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    campus_id BIGINT UNSIGNED NOT NULL,
+                    slug VARCHAR(120) NOT NULL,
+                    program_name VARCHAR(160) NOT NULL,
+                    faculty VARCHAR(160) NOT NULL,
+                    degree VARCHAR(40) NOT NULL DEFAULT 'S1',
+                    accreditation VARCHAR(80) DEFAULT 'Dalam pendataan',
+                    learning_mode VARCHAR(80) DEFAULT 'Reguler',
+                    duration VARCHAR(80) DEFAULT '8 Semester',
+                    tuition_range VARCHAR(180) DEFAULT NULL,
+                    summary TEXT NOT NULL,
+                    curriculum_points TEXT DEFAULT NULL,
+                    career_paths TEXT DEFAULT NULL,
+                    skills TEXT DEFAULT NULL,
+                    facilities TEXT DEFAULT NULL,
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY uq_study_programs_slug (slug),
+                    INDEX idx_study_programs_campus_id (campus_id),
+                    INDEX idx_study_programs_faculty (faculty),
+                    INDEX idx_study_programs_active (is_active),
+                    CONSTRAINT fk_study_programs_campus
+                        FOREIGN KEY (campus_id)
+                        REFERENCES campuses(id)
+                        ON UPDATE CASCADE
+                        ON DELETE CASCADE
+                ) ENGINE=InnoDB
+                  DEFAULT CHARACTER SET utf8mb4
+                  COLLATE utf8mb4_unicode_ci
+                """
+            )
+
+            # -------------------------------------------------
+            # BABAK 5B - SEED DATA KAMPUS TERNAMA INDONESIA
+            # -------------------------------------------------
+            # Data ini disiapkan sebagai seed realistis untuk demo.
+            # Untuk rilis final, akreditasi dan deskripsi wajib diverifikasi
+            # ulang memakai PDDikti, BAN-PT/LAM, dan website resmi kampus.
+
+            seed_campuses = [(1,
+  'universitas-esa-unggul',
+  'Universitas Esa Unggul',
+  'Jakarta dan Bekasi',
+  'Jakarta Barat dan Harapan Indah Bekasi',
+  'https://www.esaunggul.ac.id',
+  'Perguruan Tinggi Swasta',
+  'Kampus swasta dengan pilihan program studi lintas bidang. Data ini dipakai sebagai seed awal ComCam dan perlu '
+  'diverifikasi kembali dengan sumber resmi kampus.'),
+ (2,
+  'universitas-indonesia',
+  'Universitas Indonesia',
+  'Depok dan Jakarta',
+  'Depok, Jawa Barat dan Salemba, Jakarta',
+  'https://www.ui.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Perguruan tinggi negeri besar di Indonesia dengan program lintas rumpun ilmu. Data ringkas ini digunakan untuk '
+  'simulasi direktori awal.'),
+ (3,
+  'institut-teknologi-bandung',
+  'Institut Teknologi Bandung',
+  'Bandung',
+  'Bandung, Jawa Barat',
+  'https://www.itb.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Kampus negeri yang dikenal kuat pada bidang sains, teknologi, seni, desain, dan rekayasa. Data ini bersifat seed '
+  'awal untuk demo ComCam.'),
+ (4,
+  'universitas-gadjah-mada',
+  'Universitas Gadjah Mada',
+  'Yogyakarta',
+  'Sleman, Daerah Istimewa Yogyakarta',
+  'https://www.ugm.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Perguruan tinggi negeri besar di Yogyakarta dengan pilihan program studi luas. Data ini perlu diverifikasi sebelum '
+  'dipakai sebagai informasi final.'),
+ (5,
+  'institut-pertanian-bogor',
+  'IPB University',
+  'Bogor',
+  'Dramaga, Bogor, Jawa Barat',
+  'https://www.ipb.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Kampus negeri yang kuat pada rumpun pertanian, pangan, biosains, bisnis, dan teknologi terapan. Data ini adalah '
+  'seed awal ComCam.'),
+ (6,
+  'institut-teknologi-sepuluh-nopember',
+  'Institut Teknologi Sepuluh Nopember',
+  'Surabaya',
+  'Sukolilo, Surabaya, Jawa Timur',
+  'https://www.its.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Kampus negeri berbasis teknologi, sains, maritim, sistem informasi, dan rekayasa. Data disiapkan untuk demo '
+  'realistis.'),
+ (7,
+  'universitas-airlangga',
+  'Universitas Airlangga',
+  'Surabaya',
+  'Surabaya, Jawa Timur',
+  'https://www.unair.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Kampus negeri dengan kekuatan pada kesehatan, sosial, ekonomi, dan sains. Data awal ini perlu dicocokkan dengan '
+  'sumber resmi.'),
+ (8,
+  'universitas-diponegoro',
+  'Universitas Diponegoro',
+  'Semarang',
+  'Tembalang, Semarang, Jawa Tengah',
+  'https://www.undip.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Kampus negeri di Semarang dengan beragam program studi sains, sosial, ekonomi, dan teknik. Data ini untuk kebutuhan '
+  'simulasi.'),
+ (9,
+  'universitas-brawijaya',
+  'Universitas Brawijaya',
+  'Malang',
+  'Malang, Jawa Timur',
+  'https://www.ub.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Kampus negeri di Malang dengan pilihan program studi luas pada sosial, ekonomi, teknologi, kesehatan, dan '
+  'pertanian.'),
+ (10,
+  'universitas-padjadjaran',
+  'Universitas Padjadjaran',
+  'Bandung dan Sumedang',
+  'Jatinangor, Sumedang dan Bandung, Jawa Barat',
+  'https://www.unpad.ac.id',
+  'Perguruan Tinggi Negeri',
+  'Kampus negeri di Jawa Barat dengan rumpun sosial, kesehatan, hukum, komunikasi, dan sains. Data ini bersifat seed '
+  'demo.'),
+ (11,
+  'telkom-university',
+  'Telkom University',
+  'Bandung',
+  'Bandung, Jawa Barat',
+  'https://telkomuniversity.ac.id',
+  'Perguruan Tinggi Swasta',
+  'Kampus swasta yang dikenal pada bidang teknologi informasi, bisnis digital, desain, komunikasi, dan rekayasa.'),
+ (12,
+  'binus-university',
+  'BINUS University',
+  'Jakarta dan Tangerang',
+  'Jakarta, Tangerang, dan beberapa lokasi kampus lain',
+  'https://binus.ac.id',
+  'Perguruan Tinggi Swasta',
+  'Kampus swasta dengan program populer di bidang komputer, bisnis, desain, komunikasi, dan sistem informasi.'),
+ (13,
+  'universitas-gunadarma',
+  'Universitas Gunadarma',
+  'Depok dan Jakarta',
+  'Depok dan Jakarta',
+  'https://www.gunadarma.ac.id',
+  'Perguruan Tinggi Swasta',
+  'Kampus swasta yang dikenal pada bidang komputer, ekonomi, psikologi, dan teknik. Data ini digunakan sebagai seed '
+  'awal.'),
+ (14,
+  'universitas-katolik-indonesia-atma-jaya',
+  'Universitas Katolik Indonesia Atma Jaya',
+  'Jakarta',
+  'Jakarta',
+  'https://www.atmajaya.ac.id',
+  'Perguruan Tinggi Swasta',
+  'Kampus swasta dengan program di bidang bisnis, psikologi, teknik, pendidikan, dan ilmu kesehatan.'),
+ (15,
+  'universitas-trisakti',
+  'Universitas Trisakti',
+  'Jakarta',
+  'Jakarta Barat, DKI Jakarta',
+  'https://trisakti.ac.id',
+  'Perguruan Tinggi Swasta',
+  'Kampus swasta di Jakarta dengan pilihan program pada teknik, ekonomi, arsitektur, hukum, dan bidang profesional.')]
+
+            cursor.executemany(
+                """
+                INSERT INTO campuses (
+                    id, slug, campus_name, city, address, website, campus_type, description
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    campus_name = VALUES(campus_name),
+                    city = VALUES(city),
+                    address = VALUES(address),
+                    website = VALUES(website),
+                    campus_type = VALUES(campus_type),
+                    description = VALUES(description),
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                seed_campuses,
+            )
+
+            seed_programs = [(1,
+  'teknik-informatika',
+  'Teknik Informatika',
+  'Fakultas Ilmu Komputer',
+  'S1',
+  'Baik Sekali',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari pemrograman, rekayasa perangkat lunak, jaringan, keamanan, data, dan kecerdasan buatan.',
+  'Dasar pemrograman;Struktur data;Basis data;Rekayasa perangkat lunak;Kecerdasan buatan',
+  'Software Developer;Backend Developer;Data Analyst;AI Engineer;System Analyst',
+  'Problem solving;Logika algoritma;Pemrograman;Analisis data;Kolaborasi',
+  'Laboratorium komputer;Akses pembelajaran digital;Bimbingan akademik;Kegiatan minat mahasiswa'),
+ (1,
+  'sistem-informasi',
+  'Sistem Informasi',
+  'Fakultas Ilmu Komputer',
+  'S1',
+  'Baik Sekali',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi yang menghubungkan teknologi, proses bisnis, basis data, analisis sistem, dan kebutuhan organisasi.',
+  'Analisis proses bisnis;Basis data;Manajemen proyek TI;Enterprise system;UI/UX dasar',
+  'Business Analyst;System Analyst;IT Project Officer;Product Owner;Database Administrator',
+  'Analisis kebutuhan;Komunikasi bisnis;Pemodelan sistem;Manajemen data;Dokumentasi',
+  'Laboratorium komputer;Studi kasus bisnis digital;Simulasi proyek;Akses materi digital'),
+ (1,
+  'manajemen',
+  'Manajemen',
+  'Fakultas Ekonomi dan Bisnis',
+  'S1',
+  'Baik Sekali',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami pengelolaan organisasi, bisnis, pemasaran, SDM, keuangan, dan strategi.',
+  'Pengantar manajemen;Pemasaran;Keuangan;SDM;Kewirausahaan',
+  'Management Trainee;Marketing Officer;HR Officer;Business Development;Entrepreneur',
+  'Kepemimpinan;Analisis bisnis;Komunikasi;Strategi;Negosiasi',
+  'Kelas diskusi;Studi kasus bisnis;Kegiatan kewirausahaan;Bimbingan akademik'),
+ (1,
+  'desain-komunikasi-visual',
+  'Desain Komunikasi Visual',
+  'Fakultas Desain dan Industri Kreatif',
+  'S1',
+  'Dalam verifikasi',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami desain, visual branding, ilustrasi, media digital, dan komunikasi visual.',
+  'Dasar desain;Tipografi;Ilustrasi digital;Branding;Desain UI',
+  'Graphic Designer;UI Designer;Brand Designer;Illustrator;Creative Content Designer',
+  'Kreativitas visual;Komposisi;Software desain;Storytelling visual;Riset pengguna',
+  'Studio desain;Perangkat desain digital;Galeri karya;Pendampingan portofolio'),
+ (1,
+  'ilmu-komunikasi',
+  'Ilmu Komunikasi',
+  'Fakultas Ilmu Komunikasi',
+  'S1',
+  'Baik Sekali',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami komunikasi massa, public relations, media digital, konten, dan strategi komunikasi.',
+  'Dasar komunikasi;Public relations;Komunikasi digital;Produksi konten;Riset media',
+  'Public Relations Officer;Content Strategist;Social Media Specialist;Media Planner;Communication Officer',
+  'Public speaking;Menulis;Riset audiens;Produksi konten;Manajemen komunikasi',
+  'Studio media;Ruang praktik komunikasi;Kegiatan produksi konten;Bimbingan portofolio'),
+ (1,
+  'akuntansi',
+  'Akuntansi',
+  'Fakultas Ekonomi dan Bisnis',
+  'S1',
+  'Baik Sekali',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari pencatatan keuangan, audit, perpajakan, dan pelaporan bisnis.',
+  'Akuntansi dasar;Akuntansi keuangan;Perpajakan;Audit;Sistem informasi akuntansi',
+  'Accounting Staff;Auditor;Tax Officer;Finance Officer;Budget Analyst',
+  'Ketelitian;Analisis angka;Etika profesi;Pelaporan keuangan;Software akuntansi',
+  'Laboratorium akuntansi;Studi kasus laporan keuangan;Simulasi pajak;Bimbingan akademik'),
+ (2,
+  'ui-ilmu-komputer',
+  'Ilmu Komputer',
+  'Fakultas Ilmu Komputer',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari fondasi komputasi, algoritma, sistem perangkat lunak, data, dan kecerdasan buatan.',
+  'Algoritma;Matematika diskrit;Sistem operasi;Basis data;Machine learning',
+  'Software Engineer;Research Assistant;Data Scientist;AI Engineer;Cybersecurity Analyst',
+  'Pemrograman;Berpikir komputasional;Riset teknis;Analisis sistem;Pemecahan masalah',
+  'Laboratorium komputer;Komunitas teknologi;Akses riset;Ekosistem akademik besar'),
+ (2,
+  'ui-kedokteran',
+  'Pendidikan Dokter',
+  'Fakultas Kedokteran',
+  'S1',
+  'Perlu verifikasi LAM-PTKes',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk menyiapkan calon dokter melalui ilmu biomedis, klinik, etika, dan pelayanan kesehatan.',
+  'Anatomi;Fisiologi;Patologi;Keterampilan klinik;Etika kedokteran',
+  'Dokter;Peneliti kesehatan;Medical Officer;Akademisi klinik',
+  'Empati;Analisis klinis;Komunikasi pasien;Ketelitian;Etika profesi',
+  'Laboratorium biomedis;Rumah sakit pendidikan;Klinik keterampilan;Perpustakaan kesehatan'),
+ (2,
+  'ui-psikologi',
+  'Psikologi',
+  'Fakultas Psikologi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami perilaku manusia, proses mental, asesmen psikologi, dan intervensi berbasis ilmu.',
+  'Psikologi umum;Statistika psikologi;Psikometri;Psikologi perkembangan;Psikologi industri',
+  'HR Specialist;Konselor lanjutan;Research Assistant;Talent Assessment Officer',
+  'Observasi;Wawancara;Analisis data;Empati;Etika asesmen',
+  'Laboratorium psikologi;Ruang observasi;Kegiatan riset;Bimbingan akademik'),
+ (2,
+  'ui-akuntansi',
+  'Akuntansi',
+  'Fakultas Ekonomi dan Bisnis',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari akuntansi keuangan, audit, sistem informasi akuntansi, dan pengambilan keputusan bisnis.',
+  'Akuntansi keuangan;Audit;Perpajakan;Manajemen keuangan;Sistem informasi akuntansi',
+  'Auditor;Accountant;Tax Consultant;Financial Analyst',
+  'Analisis laporan;Ketelitian;Etika profesi;Pengolahan data;Problem solving',
+  'Laboratorium bisnis;Studi kasus perusahaan;Kegiatan organisasi;Akses literatur ekonomi'),
+ (3,
+  'itb-teknik-informatika',
+  'Teknik Informatika',
+  'Sekolah Teknik Elektro dan Informatika',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi teknik komputasi yang kuat pada algoritma, sistem perangkat lunak, kecerdasan buatan, dan infrastruktur digital.',
+  'Algoritma;Pemrograman lanjut;Sistem operasi;Jaringan komputer;AI',
+  'Software Engineer;AI Engineer;Cybersecurity Engineer;System Architect',
+  'Logika kuat;Matematika komputasi;Pemrograman;Riset teknis;Kolaborasi proyek',
+  'Laboratorium komputasi;Ekosistem teknologi;Komunitas riset;Project-based learning'),
+ (3,
+  'itb-teknik-elektro',
+  'Teknik Elektro',
+  'Sekolah Teknik Elektro dan Informatika',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami elektronika, sistem tenaga, telekomunikasi, kontrol, dan teknologi perangkat keras.',
+  'Rangkaian listrik;Elektronika;Sistem kontrol;Telekomunikasi;Sinyal dan sistem',
+  'Electrical Engineer;Control Engineer;Telecommunication Engineer;Hardware Engineer',
+  'Analisis rangkaian;Matematika teknik;Eksperimen;Desain sistem;Pemecahan masalah',
+  'Laboratorium elektro;Proyek rekayasa;Peralatan praktikum;Komunitas teknologi'),
+ (3,
+  'itb-teknik-sipil',
+  'Teknik Sipil',
+  'Fakultas Teknik Sipil dan Lingkungan',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk merancang, membangun, dan mengelola infrastruktur seperti gedung, jalan, jembatan, dan air.',
+  'Mekanika teknik;Struktur beton;Transportasi;Geoteknik;Manajemen konstruksi',
+  'Civil Engineer;Site Engineer;Structural Engineer;Project Engineer',
+  'Analisis struktur;Manajemen proyek;Ketelitian;Pengukuran lapangan;Software teknik',
+  'Laboratorium struktur;Laboratorium tanah;Praktik lapangan;Studio perancangan'),
+ (3,
+  'itb-desain-produk',
+  'Desain Produk',
+  'Fakultas Seni Rupa dan Desain',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk merancang produk yang fungsional, estetis, ergonomis, dan sesuai kebutuhan pengguna.',
+  'Dasar desain;Ergonomi;Material produk;Prototyping;Desain berkelanjutan',
+  'Product Designer;Industrial Designer;UX Designer;Design Researcher',
+  'Riset pengguna;Sketsa;Prototyping;Kreativitas;Pemecahan masalah',
+  'Studio desain;Workshop prototipe;Galeri karya;Peralatan produksi'),
+ (4,
+  'ugm-kedokteran',
+  'Pendidikan Dokter',
+  'Fakultas Kedokteran, Kesehatan Masyarakat, dan Keperawatan',
+  'S1',
+  'Perlu verifikasi LAM-PTKes',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk menyiapkan calon dokter dengan dasar biomedis, klinik, kesehatan masyarakat, dan etika profesi.',
+  'Biomedis;Anatomi;Keterampilan klinik;Patologi;Ilmu kesehatan masyarakat',
+  'Dokter;Medical Officer;Peneliti kesehatan;Akademisi klinik',
+  'Komunikasi pasien;Analisis klinis;Empati;Etika profesi;Kerja tim',
+  'Laboratorium medis;Rumah sakit pendidikan;Klinik keterampilan;Lingkungan riset'),
+ (4,
+  'ugm-hukum',
+  'Ilmu Hukum',
+  'Fakultas Hukum',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami sistem hukum, peraturan, argumentasi hukum, kontrak, dan penyelesaian sengketa.',
+  'Pengantar hukum;Hukum pidana;Hukum perdata;Hukum tata negara;Metode penelitian hukum',
+  'Legal Officer;Advokat setelah pendidikan profesi;Policy Analyst;Compliance Officer',
+  'Argumentasi;Analisis peraturan;Menulis hukum;Negosiasi;Etika profesi',
+  'Moot court;Perpustakaan hukum;Klinik hukum;Diskusi kasus'),
+ (4,
+  'ugm-manajemen',
+  'Manajemen',
+  'Fakultas Ekonomika dan Bisnis',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari pengelolaan bisnis, strategi, pemasaran, keuangan, operasi, dan SDM.',
+  'Manajemen dasar;Keuangan;Pemasaran;Operasi;Strategi bisnis',
+  'Management Trainee;Business Analyst;Marketing Strategist;Entrepreneur',
+  'Analisis bisnis;Komunikasi;Kepemimpinan;Pengambilan keputusan;Kolaborasi',
+  'Laboratorium bisnis;Studi kasus;Komunitas kewirausahaan;Akses riset ekonomi'),
+ (4,
+  'ugm-ilmu-komputer',
+  'Ilmu Komputer',
+  'Fakultas Matematika dan Ilmu Pengetahuan Alam',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi komputasi untuk mempelajari algoritma, pemrograman, basis data, AI, dan komputasi ilmiah.',
+  'Pemrograman;Algoritma;Basis data;Komputasi ilmiah;Machine learning',
+  'Software Developer;Data Analyst;AI Engineer;Research Assistant',
+  'Logika komputasi;Analisis data;Pemrograman;Pemodelan;Riset',
+  'Laboratorium komputer;Kegiatan riset;Komunitas teknologi;Akses literatur'),
+ (5,
+  'ipb-agribisnis',
+  'Agribisnis',
+  'Fakultas Ekonomi dan Manajemen',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari bisnis pertanian, rantai pasok pangan, pemasaran agribisnis, dan kewirausahaan.',
+  'Ekonomi pertanian;Pemasaran agribisnis;Rantai pasok;Kewirausahaan;Manajemen usaha tani',
+  'Agribusiness Analyst;Supply Chain Officer;Business Development;Entrepreneur pangan',
+  'Analisis pasar;Manajemen rantai pasok;Komunikasi bisnis;Riset lapangan;Kewirausahaan',
+  'Laboratorium bisnis;Kebun praktik;Studi lapangan;Inkubasi bisnis'),
+ (5,
+  'ipb-teknologi-pangan',
+  'Teknologi Pangan',
+  'Fakultas Teknologi Pertanian',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami pengolahan pangan, keamanan pangan, mutu, inovasi produk, dan teknologi industri pangan.',
+  'Kimia pangan;Mikrobiologi pangan;Teknologi proses;Keamanan pangan;Pengendalian mutu',
+  'Food Technologist;Quality Control;R&D Product;Food Safety Officer',
+  'Analisis laboratorium;Ketelitian;Inovasi produk;Higiene pangan;Problem solving',
+  'Laboratorium pangan;Pilot plant;Praktikum mutu;Riset produk'),
+ (5,
+  'ipb-ilmu-gizi',
+  'Ilmu Gizi',
+  'Fakultas Ekologi Manusia',
+  'S1',
+  'Perlu verifikasi LAM-PTKes',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari gizi manusia, dietetik, kesehatan masyarakat, pangan, dan intervensi gizi.',
+  'Dasar gizi;Dietetik;Biokimia gizi;Gizi masyarakat;Penilaian status gizi',
+  'Nutritionist;Dietitian setelah pendidikan profesi;Food Service Officer;Community Nutrition Officer',
+  'Komunikasi kesehatan;Analisis gizi;Empati;Edukasi masyarakat;Riset data',
+  'Laboratorium gizi;Praktik komunitas;Klinik pembelajaran;Kegiatan edukasi'),
+ (6,
+  'its-sistem-informasi',
+  'Sistem Informasi',
+  'Fakultas Teknologi Elektro dan Informatika Cerdas',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk menggabungkan teknologi, bisnis, data, analisis proses, dan transformasi digital organisasi.',
+  'Analisis sistem;Basis data;Manajemen proyek TI;Data analytics;Enterprise architecture',
+  'Business Analyst;Data Analyst;IT Consultant;Product Owner',
+  'Analisis kebutuhan;Manajemen data;Komunikasi bisnis;Dokumentasi;Kolaborasi',
+  'Laboratorium SI;Proyek industri;Komunitas teknologi;Studi kasus digital'),
+ (6,
+  'its-teknik-informatika',
+  'Teknik Informatika',
+  'Fakultas Teknologi Elektro dan Informatika Cerdas',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi teknik komputasi untuk pemrograman, AI, jaringan, keamanan, dan rekayasa perangkat lunak.',
+  'Algoritma;Pemrograman lanjut;Basis data;Jaringan;AI',
+  'Software Engineer;Backend Developer;AI Engineer;Cybersecurity Analyst',
+  'Pemrograman;Analisis sistem;Matematika komputasi;Problem solving;Kerja tim',
+  'Laboratorium komputer;Proyek perangkat lunak;Komunitas riset;Akses pembelajaran'),
+ (6,
+  'its-teknik-industri',
+  'Teknik Industri',
+  'Fakultas Teknologi Industri dan Rekayasa Sistem',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk merancang sistem kerja, produksi, rantai pasok, optimasi, dan peningkatan produktivitas.',
+  'Statistika industri;Ergonomi;Riset operasi;Manajemen produksi;Supply chain',
+  'Industrial Engineer;Process Improvement Analyst;Supply Chain Planner;Operations Analyst',
+  'Optimasi;Analisis proses;Pemodelan sistem;Manajemen proyek;Komunikasi',
+  'Laboratorium ergonomi;Simulasi industri;Studi lapangan;Software optimasi'),
+ (7,
+  'unair-farmasi',
+  'Farmasi',
+  'Fakultas Farmasi',
+  'S1',
+  'Perlu verifikasi LAM-PTKes',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari obat, formulasi, farmakologi, pelayanan kefarmasian, dan pengembangan produk kesehatan.',
+  'Kimia farmasi;Farmakologi;Teknologi sediaan;Farmasi klinik;Regulasi obat',
+  'Pharmacist setelah profesi;R&D Farmasi;Quality Assurance;Regulatory Affairs',
+  'Ketelitian;Analisis laboratorium;Etika kesehatan;Komunikasi pasien;Riset',
+  'Laboratorium farmasi;Praktikum formulasi;Fasilitas riset;Kerja sama kesehatan'),
+ (7,
+  'unair-kesehatan-masyarakat',
+  'Kesehatan Masyarakat',
+  'Fakultas Kesehatan Masyarakat',
+  'S1',
+  'Perlu verifikasi LAM-PTKes',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami epidemiologi, promosi kesehatan, kebijakan, keselamatan kerja, dan kesehatan lingkungan.',
+  'Epidemiologi;Biostatistika;Promosi kesehatan;K3;Kesehatan lingkungan',
+  'Public Health Officer;Health Promoter;Epidemiology Assistant;K3 Officer',
+  'Analisis data;Komunikasi masyarakat;Riset lapangan;Perencanaan program;Advokasi',
+  'Laboratorium kesehatan;Praktik komunitas;Riset lapangan;Kegiatan edukasi'),
+ (7,
+  'unair-manajemen',
+  'Manajemen',
+  'Fakultas Ekonomi dan Bisnis',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi bisnis untuk strategi, pemasaran, operasi, keuangan, organisasi, dan kewirausahaan.',
+  'Manajemen dasar;Keuangan;Pemasaran;Operasi;Kewirausahaan',
+  'Management Trainee;Marketing Officer;Business Analyst;Entrepreneur',
+  'Kepemimpinan;Analisis pasar;Komunikasi;Pengambilan keputusan;Negosiasi',
+  'Laboratorium bisnis;Studi kasus;Kegiatan kewirausahaan;Komunitas mahasiswa'),
+ (8,
+  'undip-teknik-sipil',
+  'Teknik Sipil',
+  'Fakultas Teknik',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk merancang dan mengelola infrastruktur bangunan, jalan, jembatan, air, dan proyek konstruksi.',
+  'Mekanika teknik;Struktur;Hidrologi;Transportasi;Manajemen konstruksi',
+  'Civil Engineer;Structural Engineer;Site Engineer;Project Planner',
+  'Analisis struktur;Pengukuran;Manajemen proyek;Software teknik;Ketelitian',
+  'Laboratorium struktur;Laboratorium tanah;Studio perancangan;Praktik lapangan'),
+ (8,
+  'undip-ilmu-komunikasi',
+  'Ilmu Komunikasi',
+  'Fakultas Ilmu Sosial dan Ilmu Politik',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari komunikasi strategis, media, public relations, riset audiens, dan komunikasi digital.',
+  'Teori komunikasi;Public relations;Media digital;Riset komunikasi;Produksi konten',
+  'PR Officer;Content Strategist;Media Planner;Communication Analyst',
+  'Menulis;Public speaking;Riset audiens;Produksi konten;Strategi komunikasi',
+  'Studio komunikasi;Kegiatan media;Diskusi kasus;Praktik produksi'),
+ (8,
+  'undip-akuntansi',
+  'Akuntansi',
+  'Fakultas Ekonomika dan Bisnis',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari laporan keuangan, audit, perpajakan, sistem informasi akuntansi, dan tata kelola.',
+  'Akuntansi keuangan;Audit;Perpajakan;Akuntansi manajemen;SIA',
+  'Auditor;Accountant;Tax Officer;Finance Analyst',
+  'Ketelitian;Analisis angka;Etika;Pelaporan;Pengolahan data',
+  'Laboratorium akuntansi;Studi kasus perusahaan;Simulasi laporan;Akses literatur'),
+ (9,
+  'ub-administrasi-bisnis',
+  'Ilmu Administrasi Bisnis',
+  'Fakultas Ilmu Administrasi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami organisasi bisnis, pemasaran, kewirausahaan, administrasi perusahaan, dan strategi layanan.',
+  'Administrasi bisnis;Pemasaran;Keuangan bisnis;Kewirausahaan;Perilaku organisasi',
+  'Business Development;Marketing Officer;Operations Staff;Entrepreneur',
+  'Komunikasi bisnis;Analisis pasar;Manajemen proses;Negosiasi;Perencanaan',
+  'Laboratorium bisnis;Studi kasus;Kegiatan kewirausahaan;Diskusi proyek'),
+ (9,
+  'ub-teknik-informatika',
+  'Teknik Informatika',
+  'Fakultas Ilmu Komputer',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari sistem komputasi, pemrograman, data, perangkat lunak, dan teknologi cerdas.',
+  'Pemrograman;Basis data;Jaringan;Rekayasa perangkat lunak;AI',
+  'Software Developer;Data Analyst;Backend Developer;System Analyst',
+  'Pemrograman;Analisis masalah;Logika komputasi;Kolaborasi;Riset teknis',
+  'Laboratorium komputer;Proyek teknologi;Komunitas IT;Kegiatan riset'),
+ (9,
+  'ub-manajemen',
+  'Manajemen',
+  'Fakultas Ekonomi dan Bisnis',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami fungsi bisnis, strategi, keuangan, pemasaran, SDM, dan kewirausahaan.',
+  'Manajemen dasar;Keuangan;Pemasaran;SDM;Strategi',
+  'Management Trainee;Business Analyst;HR Officer;Entrepreneur',
+  'Leadership;Analisis bisnis;Komunikasi;Strategi;Problem solving',
+  'Laboratorium bisnis;Studi kasus;Komunitas kewirausahaan;Bimbingan akademik'),
+ (10,
+  'unpad-ilmu-komunikasi',
+  'Ilmu Komunikasi',
+  'Fakultas Ilmu Komunikasi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari public relations, jurnalistik, komunikasi digital, media, dan riset komunikasi.',
+  'Teori komunikasi;Jurnalistik;Public relations;Komunikasi digital;Riset komunikasi',
+  'PR Officer;Journalist;Content Strategist;Media Analyst',
+  'Menulis;Public speaking;Riset audiens;Produksi media;Strategi pesan',
+  'Studio komunikasi;Praktik media;Kegiatan produksi;Diskusi kasus'),
+ (10,
+  'unpad-psikologi',
+  'Psikologi',
+  'Fakultas Psikologi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami perilaku, proses mental, asesmen, perkembangan, organisasi, dan kesehatan mental.',
+  'Psikologi umum;Psikometri;Psikologi perkembangan;Psikologi sosial;Metode riset',
+  'HR Specialist;Research Assistant;Talent Assessment Officer;Konselor setelah pendidikan lanjut',
+  'Observasi;Wawancara;Analisis data;Empati;Etika',
+  'Laboratorium psikologi;Ruang observasi;Riset lapangan;Bimbingan akademik'),
+ (10,
+  'unpad-hukum',
+  'Ilmu Hukum',
+  'Fakultas Hukum',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami prinsip hukum, kontrak, litigasi, kebijakan publik, dan tata kelola.',
+  'Pengantar hukum;Hukum pidana;Hukum perdata;Hukum bisnis;Metode riset hukum',
+  'Legal Officer;Compliance Staff;Policy Analyst;Advokat setelah profesi',
+  'Argumentasi;Analisis peraturan;Menulis hukum;Negosiasi;Etika',
+  'Moot court;Perpustakaan hukum;Klinik hukum;Diskusi kasus'),
+ (11,
+  'telkom-informatika',
+  'Informatika',
+  'Fakultas Informatika',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi teknologi untuk pemrograman, data, cloud, AI, keamanan, dan pengembangan produk digital.',
+  'Pemrograman;Algoritma;Cloud computing;Data science;Keamanan siber',
+  'Software Engineer;Cloud Engineer;AI Engineer;Security Analyst',
+  'Pemrograman;Problem solving;Analisis data;Kolaborasi agile;Riset produk',
+  'Laboratorium IT;Proyek industri;Komunitas startup;Infrastruktur digital'),
+ (11,
+  'telkom-sistem-informasi',
+  'Sistem Informasi',
+  'Fakultas Rekayasa Industri',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi yang menghubungkan sistem digital, proses bisnis, data, manajemen proyek, dan inovasi layanan.',
+  'Analisis sistem;Proses bisnis;Basis data;Manajemen proyek;Data analytics',
+  'Business Analyst;Product Owner;IT Consultant;Data Analyst',
+  'Komunikasi bisnis;Analisis data;Dokumentasi;Agile teamwork;Problem solving',
+  'Laboratorium SI;Project-based learning;Studi kasus industri;Ekosistem digital'),
+ (11,
+  'telkom-dkv',
+  'Desain Komunikasi Visual',
+  'Fakultas Industri Kreatif',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi desain untuk branding, UI, ilustrasi, animasi, media kreatif, dan komunikasi visual digital.',
+  'Dasar desain;Brand identity;Tipografi;Ilustrasi;Desain interaktif',
+  'Graphic Designer;UI Designer;Brand Designer;Motion Designer',
+  'Kreativitas;Software desain;Riset visual;Storytelling;Portofolio',
+  'Studio desain;Workshop kreatif;Galeri karya;Komunitas kreatif'),
+ (12,
+  'binus-computer-science',
+  'Computer Science',
+  'School of Computer Science',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi komputer untuk software engineering, AI, data, web, mobile, dan teknologi digital.',
+  'Programming;Data structures;Software engineering;AI;Database systems',
+  'Software Engineer;Mobile Developer;AI Engineer;Data Analyst',
+  'Coding;Computational thinking;Team project;Problem solving;Product thinking',
+  'Computer lab;Industry project;Innovation ecosystem;Digital learning'),
+ (12,
+  'binus-information-systems',
+  'Information Systems',
+  'School of Information Systems',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk menggabungkan teknologi, bisnis, enterprise system, data, dan transformasi digital.',
+  'Business process;Database;Enterprise system;Project management;Data analytics',
+  'System Analyst;Business Analyst;IT Consultant;Product Owner',
+  'Business analysis;Documentation;Data management;Communication;Agile collaboration',
+  'IS lab;Case-based learning;Industry collaboration;Digital platform'),
+ (12,
+  'binus-vcd',
+  'Visual Communication Design',
+  'School of Design',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi desain visual untuk branding, media digital, ilustrasi, UI, dan komunikasi kreatif.',
+  'Design principles;Typography;Branding;Digital illustration;UI design',
+  'Graphic Designer;Brand Designer;UI Designer;Creative Designer',
+  'Visual thinking;Design software;Creative research;Composition;Portfolio building',
+  'Design studio;Creative lab;Portfolio mentoring;Exhibition activities'),
+ (13,
+  'gunadarma-sistem-informasi',
+  'Sistem Informasi',
+  'Fakultas Ilmu Komputer dan Teknologi Informasi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari analisis sistem, basis data, pemrograman, bisnis, dan implementasi sistem informasi.',
+  'Basis data;Analisis sistem;Pemrograman;Manajemen proyek;Sistem enterprise',
+  'System Analyst;IT Support Analyst;Business Analyst;Database Officer',
+  'Analisis kebutuhan;Pemrograman dasar;Dokumentasi;Data handling;Komunikasi',
+  'Laboratorium komputer;Kegiatan praktikum;Proyek sistem;Akses materi digital'),
+ (13,
+  'gunadarma-teknik-informatika',
+  'Teknik Informatika',
+  'Fakultas Teknologi Industri',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mengembangkan kemampuan pemrograman, jaringan, perangkat lunak, database, dan teknologi komputasi.',
+  'Algoritma;Pemrograman;Basis data;Jaringan komputer;Rekayasa perangkat lunak',
+  'Programmer;Software Developer;Network Support;System Analyst',
+  'Coding;Problem solving;Analisis sistem;Kerja tim;Ketelitian',
+  'Laboratorium komputer;Praktikum jaringan;Proyek aplikasi;Kegiatan IT'),
+ (13,
+  'gunadarma-psikologi',
+  'Psikologi',
+  'Fakultas Psikologi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk mempelajari perilaku, perkembangan, psikometri, industri organisasi, dan riset psikologi.',
+  'Psikologi umum;Psikometri;Perkembangan;Sosial;Industri organisasi',
+  'HR Staff;Talent Assessment;Research Assistant;Konselor setelah studi lanjut',
+  'Observasi;Wawancara;Empati;Analisis data;Etika',
+  'Laboratorium psikologi;Ruang observasi;Kegiatan riset;Diskusi kasus'),
+ (14,
+  'atma-psikologi',
+  'Psikologi',
+  'Fakultas Psikologi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami perilaku manusia, asesmen, perkembangan, kesehatan mental, dan psikologi organisasi.',
+  'Psikologi dasar;Psikometri;Konseling dasar;Psikologi industri;Metode riset',
+  'HR Specialist;Research Assistant;Talent Officer;Konselor setelah pendidikan lanjut',
+  'Empati;Observasi;Analisis data;Komunikasi;Etika',
+  'Laboratorium psikologi;Kegiatan riset;Diskusi kasus;Bimbingan akademik'),
+ (14,
+  'atma-teknik-industri',
+  'Teknik Industri',
+  'Fakultas Teknik',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk merancang sistem produksi, layanan, optimasi proses, ergonomi, dan rantai pasok.',
+  'Riset operasi;Ergonomi;Manajemen produksi;Statistika;Supply chain',
+  'Industrial Engineer;Process Analyst;Production Planner;Supply Chain Officer',
+  'Optimasi;Analisis proses;Manajemen proyek;Komunikasi;Data analysis',
+  'Laboratorium teknik industri;Simulasi sistem;Proyek industri;Studi kasus'),
+ (14,
+  'atma-akuntansi',
+  'Akuntansi',
+  'Fakultas Ekonomi dan Bisnis',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami akuntansi, audit, perpajakan, pelaporan keuangan, dan tata kelola bisnis.',
+  'Akuntansi keuangan;Audit;Pajak;Akuntansi manajemen;SIA',
+  'Auditor;Accountant;Tax Officer;Financial Staff',
+  'Ketelitian;Analisis angka;Etika;Pelaporan;Komunikasi bisnis',
+  'Laboratorium bisnis;Studi kasus keuangan;Diskusi profesional;Akses literatur'),
+ (15,
+  'trisakti-arsitektur',
+  'Arsitektur',
+  'Fakultas Teknik Sipil dan Perencanaan',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk merancang bangunan, ruang, lingkungan, konsep desain, dan gambar teknis arsitektur.',
+  'Studio desain;Struktur bangunan;Sejarah arsitektur;Perancangan kota;Teknologi bangunan',
+  'Architect setelah profesi;Interior Designer;Urban Design Assistant;Drafter',
+  'Sketsa;Perancangan ruang;Software desain;Kreativitas;Presentasi visual',
+  'Studio arsitektur;Workshop maket;Ruang presentasi;Praktik desain'),
+ (15,
+  'trisakti-teknik-perminyakan',
+  'Teknik Perminyakan',
+  'Fakultas Teknologi Kebumian dan Energi',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi untuk memahami eksplorasi, produksi, reservoir, pengeboran, dan pengelolaan energi migas.',
+  'Geologi dasar;Reservoir;Pengeboran;Produksi migas;Manajemen energi',
+  'Petroleum Engineer;Drilling Engineer;Reservoir Analyst;Energy Analyst',
+  'Analisis data teknis;Matematika teknik;Keselamatan kerja;Problem solving;Kerja lapangan',
+  'Laboratorium kebumian;Simulasi reservoir;Praktik lapangan;Kegiatan industri'),
+ (15,
+  'trisakti-manajemen',
+  'Manajemen',
+  'Fakultas Ekonomi dan Bisnis',
+  'S1',
+  'Perlu verifikasi BAN-PT/LAM',
+  'Reguler',
+  '8 Semester',
+  'Cek laman resmi kampus untuk biaya terbaru',
+  'Program studi bisnis untuk memahami pemasaran, keuangan, SDM, operasi, strategi, dan kewirausahaan.',
+  'Manajemen dasar;Pemasaran;Keuangan;SDM;Kewirausahaan',
+  'Management Trainee;Marketing Officer;Business Analyst;Entrepreneur',
+  'Leadership;Komunikasi;Analisis bisnis;Strategi;Negosiasi',
+  'Laboratorium bisnis;Studi kasus;Kegiatan wirausaha;Bimbingan akademik')]
+
+            cursor.executemany(
+                """
+                INSERT INTO study_programs (
+                    campus_id, slug, program_name, faculty, degree, accreditation,
+                    learning_mode, duration, tuition_range, summary, curriculum_points,
+                    career_paths, skills, facilities
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    campus_id = VALUES(campus_id),
+                    program_name = VALUES(program_name),
+                    faculty = VALUES(faculty),
+                    degree = VALUES(degree),
+                    accreditation = VALUES(accreditation),
+                    learning_mode = VALUES(learning_mode),
+                    duration = VALUES(duration),
+                    tuition_range = VALUES(tuition_range),
+                    summary = VALUES(summary),
+                    curriculum_points = VALUES(curriculum_points),
+                    career_paths = VALUES(career_paths),
+                    skills = VALUES(skills),
+                    facilities = VALUES(facilities),
+                    is_active = 1,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                seed_programs,
+            )
+
+        database.commit_db()
+
+
+    def normalize_program_row(row: dict[str, Any]) -> dict[str, Any]:
+        """
+        Menyiapkan data program studi agar mudah ditampilkan template.
+        """
+
+        program = dict(row)
+        program["curriculum_points"] = split_semicolon_text(program.get("curriculum_points"))
+        program["career_paths"] = split_semicolon_text(program.get("career_paths"))
+        program["skills"] = split_semicolon_text(program.get("skills"))
+        program["facilities"] = split_semicolon_text(program.get("facilities"))
+        return program
+
+
+    def load_program_directory(limit: int = 36) -> list[dict[str, Any]]:
+        """
+        Mengambil daftar program studi untuk direktori.
+
+        Direktori ini belum menjadi modul search penuh.
+        Tujuannya agar halaman campus-detail terasa realistis saat demo
+        karena calon mahasiswa dapat melihat beberapa pilihan kampus dan prodi.
+        """
+
+        with database.get_cursor(dictionary=True) as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    sp.slug,
+                    sp.program_name,
+                    sp.faculty,
+                    sp.degree,
+                    sp.accreditation,
+                    c.campus_name,
+                    c.city AS campus_city,
+                    c.campus_type
+                FROM study_programs sp
+                INNER JOIN campuses c
+                    ON c.id = sp.campus_id
+                WHERE sp.is_active = 1
+                ORDER BY c.campus_name ASC, sp.program_name ASC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+
+            return cursor.fetchall() or []
+
+
+    def load_directory_stats() -> dict[str, int]:
+        """
+        Menghitung statistik ringkas data kampus.
+        """
+
+        stats = {
+            "campus_count": 0,
+            "program_count": 0,
+        }
+
+        with database.get_cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT COUNT(*) AS total FROM campuses")
+            campus_row = cursor.fetchone() or {}
+
+            cursor.execute("SELECT COUNT(*) AS total FROM study_programs WHERE is_active = 1")
+            program_row = cursor.fetchone() or {}
+
+        stats["campus_count"] = int(campus_row.get("total") or 0)
+        stats["program_count"] = int(program_row.get("total") or 0)
+        return stats
+
+
+    def build_fallback_campus_context() -> dict[str, Any]:
+        """
+        Fallback agar halaman detail tetap tampil jika database belum siap.
+        """
+
+        related_programs = [
+            {"program_name": "Sistem Informasi", "slug": "sistem-informasi", "faculty": "Fakultas Ilmu Komputer", "degree": "S1"},
+            {"program_name": "Manajemen", "slug": "manajemen", "faculty": "Fakultas Ekonomi dan Bisnis", "degree": "S1"},
+            {"program_name": "Desain Komunikasi Visual", "slug": "desain-komunikasi-visual", "faculty": "Fakultas Desain dan Industri Kreatif", "degree": "S1"},
+        ]
+
+        return {
+            "program": dict(FALLBACK_CAMPUS_DATA),
+            "related_programs": related_programs,
+            "directory_programs": related_programs,
+            "directory_stats": {
+                "campus_count": 1,
+                "program_count": len(related_programs) + 1,
+            },
+            "campus_error": None,
+        }
+
+
+    def load_campus_detail_context(program_slug: str | None = None) -> dict[str, Any]:
+        """
+        Mengambil data detail program studi dari database Babak 5.
+        """
+
+        safe_slug = (program_slug or DEFAULT_PROGRAM_SLUG).strip().lower()
+
+        try:
+            ensure_campus_tables()
+
+            with database.get_cursor(dictionary=True) as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        sp.id,
+                        sp.slug AS program_slug,
+                        sp.program_name,
+                        sp.faculty,
+                        sp.degree,
+                        sp.accreditation,
+                        sp.learning_mode,
+                        sp.duration,
+                        sp.tuition_range,
+                        sp.summary,
+                        sp.curriculum_points,
+                        sp.career_paths,
+                        sp.skills,
+                        sp.facilities,
+                        c.slug AS campus_slug,
+                        c.campus_name,
+                        c.city AS campus_city,
+                        c.address AS campus_address,
+                        c.website AS campus_website,
+                        c.campus_type,
+                        c.description AS campus_description
+                    FROM study_programs sp
+                    INNER JOIN campuses c ON c.id = sp.campus_id
+                    WHERE sp.slug = %s AND sp.is_active = 1
+                    LIMIT 1
+                    """,
+                    (safe_slug,),
+                )
+                row = cursor.fetchone()
+
+                if row is None and safe_slug != DEFAULT_PROGRAM_SLUG:
+                    cursor.execute(
+                        """
+                        SELECT
+                            sp.id,
+                            sp.slug AS program_slug,
+                            sp.program_name,
+                            sp.faculty,
+                            sp.degree,
+                            sp.accreditation,
+                            sp.learning_mode,
+                            sp.duration,
+                            sp.tuition_range,
+                            sp.summary,
+                            sp.curriculum_points,
+                            sp.career_paths,
+                            sp.skills,
+                            sp.facilities,
+                            c.slug AS campus_slug,
+                            c.campus_name,
+                            c.city AS campus_city,
+                            c.address AS campus_address,
+                            c.website AS campus_website,
+                            c.campus_type,
+                            c.description AS campus_description
+                        FROM study_programs sp
+                        INNER JOIN campuses c ON c.id = sp.campus_id
+                        WHERE sp.slug = %s AND sp.is_active = 1
+                        LIMIT 1
+                        """,
+                        (DEFAULT_PROGRAM_SLUG,),
+                    )
+                    row = cursor.fetchone()
+
+                if row is None:
+                    return build_fallback_campus_context()
+
+                program = normalize_program_row(row)
+
+                cursor.execute(
+                    """
+                    SELECT slug, program_name, faculty, degree
+                    FROM study_programs
+                    WHERE is_active = 1 AND slug != %s
+                    ORDER BY CASE WHEN faculty = %s THEN 0 ELSE 1 END, program_name ASC
+                    LIMIT 4
+                    """,
+                    (program["program_slug"], program["faculty"]),
+                )
+                related_programs = cursor.fetchall() or []
+
+            return {
+                "program": program,
+                "related_programs": related_programs,
+                "directory_programs": load_program_directory(),
+                "directory_stats": load_directory_stats(),
+                "campus_error": None,
+            }
+
+        except (Error, RuntimeError):
+            database.rollback_db()
+            app.logger.exception("Data campus-detail gagal dimuat.")
+            context = build_fallback_campus_context()
+            context["campus_error"] = (
+                "Database program studi belum siap. Halaman menampilkan data contoh."
+            )
+            return context
 
 
     def enrich_ticket_message_row(message_row: dict[str, Any]) -> dict[str, Any]:
@@ -974,27 +2228,122 @@ def create_app(
     @app.get("/search")
     def search():
         """
-        Route sementara untuk pencarian dari home page.
+        Route pencarian sederhana untuk Babak 5B.
 
-        Nanti route ini bisa diarahkan ke halaman pencarian khusus
-        setelah modul data kampus dan program studi dibuat.
+        Jika kata kunci cocok dengan program studi atau nama kampus
+        pada database seed realistis, user langsung diarahkan ke halaman
+        campus-detail program pertama yang paling relevan.
+
+        Search penuh dengan halaman hasil terpisah akan dibuat pada babak
+        lanjutan setelah modul data kampus benar-benar final.
         """
 
         search_query = request.args.get("q", "").strip()
+        search_focus = request.args.get("focus", "").strip()
+        normalized_query = search_query.lower()
+
+        program_keyword_map = {
+            "teknik informatika": "teknik-informatika",
+            "informatika": "teknik-informatika",
+            "sistem informasi": "sistem-informasi",
+            "manajemen": "manajemen",
+            "desain komunikasi visual": "desain-komunikasi-visual",
+            "dkv": "desain-komunikasi-visual",
+            "ilmu komunikasi": "ilmu-komunikasi",
+            "akuntansi": "akuntansi",
+        }
+
+        matched_slug = program_keyword_map.get(normalized_query)
+
+        if matched_slug:
+            return redirect(
+                url_for(
+                    "campus_detail_slug",
+                    program_slug=matched_slug,
+                )
+            )
+
+        if search_query:
+            try:
+                ensure_campus_tables()
+
+                like_query = f"%{search_query}%"
+
+                with database.get_cursor(dictionary=True) as cursor:
+                    cursor.execute(
+                        """
+                        SELECT sp.slug
+                        FROM study_programs sp
+                        INNER JOIN campuses c
+                            ON c.id = sp.campus_id
+                        WHERE sp.is_active = 1
+                          AND (
+                              LOWER(sp.program_name) LIKE LOWER(%s)
+                              OR LOWER(sp.faculty) LIKE LOWER(%s)
+                              OR LOWER(c.campus_name) LIKE LOWER(%s)
+                              OR LOWER(c.city) LIKE LOWER(%s)
+                          )
+                        ORDER BY
+                            CASE
+                                WHEN LOWER(sp.program_name) = LOWER(%s) THEN 0
+                                WHEN LOWER(c.campus_name) = LOWER(%s) THEN 1
+                                ELSE 2
+                            END,
+                            c.campus_name ASC,
+                            sp.program_name ASC
+                        LIMIT 1
+                        """,
+                        (
+                            like_query,
+                            like_query,
+                            like_query,
+                            like_query,
+                            search_query,
+                            search_query,
+                        ),
+                    )
+
+                    row = cursor.fetchone()
+
+                if row:
+                    return redirect(
+                        url_for(
+                            "campus_detail_slug",
+                            program_slug=row["slug"],
+                        )
+                    )
+
+            except (Error, RuntimeError):
+                database.rollback_db()
+                app.logger.exception("Pencarian data kampus gagal.")
 
         search_notice = None
 
         if search_query:
             search_notice = (
-                f"Hasil pencarian untuk '{search_query}' akan ditampilkan "
-                "setelah modul data kampus dan program studi diaktifkan."
+                f"Kami belum menemukan hasil yang cocok untuk '{search_query}' karena data masih belum lengkap. "
+                "Silakan coba kata kunci lain seperti nama kampus ternama, nama program studi terminat, "
+                "atau bidang keilmuan yang ingin kamu cari tapi yang banyak minatnya."
             )
+
+            # Menjaga posisi pengguna tetap berada di bagian Program Studi
+            # setelah pencarian tidak ditemukan. Tanpa ini, browser akan
+            # memuat ulang halaman dari paling atas.
+            if search_focus != "program-studi":
+                return redirect(
+                    url_for(
+                        "search",
+                        q=search_query,
+                        focus="program-studi",
+                    ) + "#program-studi"
+                )
 
         return render_template(
             "index.html",
             **build_index_context(
                 search_query=search_query,
                 search_notice=search_notice,
+                search_focus=search_focus,
             ),
         )
     
@@ -1006,6 +2355,39 @@ def create_app(
         """
 
         return search()
+
+    # =====================================================
+    # 6.0. ROUTE BABAK 5 - DETAIL KAMPUS DAN PROGRAM STUDI
+    # =====================================================
+
+    @app.get("/campus-detail")
+    def campus_detail():
+        """
+        Menampilkan halaman detail program studi.
+
+        Query opsional:
+        /campus-detail?program=teknik-informatika
+        """
+
+        program_slug = request.args.get("program", DEFAULT_PROGRAM_SLUG)
+
+        return render_template(
+            "campus-detail.html",
+            **load_campus_detail_context(program_slug),
+        )
+
+
+    @app.get("/campus-detail/<program_slug>")
+    def campus_detail_slug(program_slug: str):
+        """
+        URL rapi untuk detail program studi.
+        """
+
+        return render_template(
+            "campus-detail.html",
+            **load_campus_detail_context(program_slug),
+        )
+
 
     @app.get("/dashboard")
     @login_required
@@ -1080,7 +2462,7 @@ def create_app(
             )
 
             return redirect(
-                url_for("ticket")
+                url_for("ticket") + "#ticket-form"
             )
 
         context.update(detail_context)
@@ -1099,7 +2481,7 @@ def create_app(
         """
 
         return redirect(
-            url_for("ticket")
+            url_for("ticket") + "#ticket-form"
         )
 
 
@@ -1205,7 +2587,7 @@ def create_app(
         # percakapan user-admin langsung terasa jelas.
         if ticket_id is not None:
             return redirect(
-                url_for("ticket_detail", ticket_id=int(ticket_id))
+                url_for("ticket_detail", ticket_id=int(ticket_id)) + "#detail-tiket"
             )
 
         return redirect(
@@ -1291,7 +2673,7 @@ def create_app(
             flash("Status tiket tidak valid.", "error")
 
             return redirect(
-                url_for("admin_panel")
+                url_for("admin_panel") + "#admin-tickets"
             )
 
         try:
@@ -1351,7 +2733,7 @@ def create_app(
             flash(errors[0], "error")
 
             return redirect(
-                url_for("admin_panel")
+                url_for("admin_panel") + "#admin-tickets"
             )
 
         try:
@@ -1374,7 +2756,7 @@ def create_app(
                 flash("Tiket tidak ditemukan.", "error")
 
                 return redirect(
-                    url_for("admin_panel")
+                    url_for("admin_panel") + "#admin-tickets"
                 )
 
             with database.get_cursor() as cursor:
@@ -1493,6 +2875,17 @@ def create_app(
 
         return redirect(
             url_for("admin_panel")
+        )
+
+
+    @app.get("/campus-detail.html")
+    def legacy_campus_detail():
+        """
+        Mengarahkan URL lama campus-detail.html menuju route Flask Babak 5.
+        """
+
+        return redirect(
+            url_for("campus_detail")
         )
 
 
