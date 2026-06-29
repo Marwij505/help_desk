@@ -53,3 +53,6 @@ Status proyek: Dalam tahap pengembangan (MASIH LAMA DAN RIBET tapi cocok untuk p
     
     -python -m flask --version
       -hasilnya banyak
+
+8.kalau udah semua, tinggal ngerun webnya di app.py okay kawan-kawan kuh dan ini masih bersifat pengembangan jadi kembangin dah kalo
+  kalian ada waktu dengan versi kalian sendiri
