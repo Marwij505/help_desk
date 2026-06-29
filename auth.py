@@ -864,7 +864,9 @@ def login():
     ):
         return redirect(next_destination)
 
-    return redirect(url_for("index"))
+    return redirect(
+        url_for("index")
+    )
 
 
 # =========================================================
@@ -1067,8 +1069,10 @@ def forgot_password():
         current_user.is_authenticated
         and int(current_user.id) == user_id
     ):
+        # Jangan memanggil session.clear() setelah logout_user().
+        # Flask-Login perlu menyimpan tanda penghapusan remember cookie
+        # di session agar cookie Remember Me benar-benar dibersihkan.
         logout_user()
-        session.clear()
 
     return redirect(
         url_for(
@@ -1102,8 +1106,10 @@ def logout():
         description="Pengguna keluar dari akun.",
     )
 
+    # Penting: jangan panggil session.clear() setelah logout_user().
+    # Jika user login dengan Remember Me, session.clear() akan menghapus
+    # tanda internal Flask-Login untuk membersihkan remember cookie.
     logout_user()
-    session.clear()
 
     return redirect(
         url_for(

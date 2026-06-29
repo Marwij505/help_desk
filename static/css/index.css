@@ -457,6 +457,30 @@ ul {
     color: var(--color-primary-dark);
 }
 
+.button-account {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-blue));
+    color: var(--color-white);
+}
+
+.button-account:hover {
+    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+    color: var(--color-white);
+}
+
+.button-ghost-header {
+    min-height: 42px;
+    padding-inline: 16px;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-white);
+}
+
+.button-ghost-header:hover {
+    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--color-white);
+}
+
 .mobile-menu-button {
     display: none;
 }
@@ -477,7 +501,7 @@ ul {
     color: var(--color-white);
 }
 
-/* Garis dekorasi lembut seperti dashboard modern */
+/* Garis dekorasi lembut untuk memberi kedalaman visual */
 .hero-section::before {
     position: absolute;
     inset: 0;
@@ -974,6 +998,400 @@ ul {
 }
 
 
+
+
+/* =========================================================
+   AREA AKUN PENGGUNA DI HOMEPAGE
+   Babak 2:
+   Section ini berfungsi sebagai area akun ringkas di dalam index.
+   Tidak ada halaman halaman terpisah.
+   ========================================================= */
+
+.user-home-section {
+    position: relative;
+    padding-block: 72px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 8% 18%, rgba(91, 92, 246, 0.14), transparent 28%),
+        radial-gradient(circle at 92% 82%, rgba(79, 140, 255, 0.11), transparent 30%),
+        var(--color-background);
+}
+
+.user-home-shell {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(24px, 4vw, 42px);
+    border: 1px solid rgba(91, 92, 246, 0.16);
+    border-radius: 30px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 255, 0.96)),
+        var(--color-white);
+    box-shadow: var(--shadow-medium);
+}
+
+.user-home-shell::before {
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: rgba(91, 92, 246, 0.11);
+    content: "";
+}
+
+.user-home-hero {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.36fr);
+    gap: 28px;
+    align-items: stretch;
+    margin-bottom: 26px;
+}
+
+.user-home-content h2 {
+    margin-bottom: 12px;
+    font-size: clamp(1.9rem, 3.1vw, 2.75rem);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1.12;
+}
+
+.user-home-content p {
+    max-width: 760px;
+    margin-bottom: 20px;
+    color: var(--color-text-soft);
+    font-size: 0.98rem;
+}
+
+.user-home-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.meta-pill {
+    display: inline-flex;
+    min-height: 50px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 9px 14px;
+    border: 1px solid rgba(91, 92, 246, 0.18);
+    border-radius: 16px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+}
+
+.meta-pill small {
+    color: var(--color-text-muted);
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.meta-pill strong {
+    max-width: 260px;
+    overflow: hidden;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-profile-card {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at top right, rgba(91, 92, 246, 0.12), transparent 45%),
+        var(--color-white);
+    box-shadow: 0 14px 34px rgba(15, 23, 55, 0.08);
+}
+
+.user-avatar {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    place-items: center;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-blue));
+    color: var(--color-white);
+    font-size: 1.42rem;
+    font-weight: 800;
+    box-shadow: 0 14px 30px rgba(91, 92, 246, 0.26);
+}
+
+.user-profile-info {
+    display: grid;
+    gap: 3px;
+}
+
+.user-profile-info span {
+    color: var(--color-primary-dark);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.user-profile-info strong {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.user-profile-info small {
+    overflow: hidden;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-profile-logout {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+    padding: 10px 14px;
+    border: 1px solid rgba(220, 38, 38, 0.16);
+    border-radius: 12px;
+    background: #fff1f1;
+    color: #b42323;
+    font-size: 0.82rem;
+    font-weight: 800;
+    transition:
+        transform var(--transition-fast),
+        background-color var(--transition-fast),
+        border-color var(--transition-fast);
+}
+
+.user-profile-logout:hover {
+    border-color: rgba(220, 38, 38, 0.28);
+    background: #ffe7e7;
+    transform: translateY(-2px);
+}
+
+.user-home-panel-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.user-panel-card {
+    padding: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 28px rgba(20, 28, 60, 0.045);
+}
+
+.user-panel-card-wide {
+    grid-column: 1 / -1;
+}
+
+.account-card-heading {
+    margin-bottom: 17px;
+}
+
+.account-card-heading span {
+    display: inline-block;
+    margin-bottom: 5px;
+    color: var(--color-primary-dark);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.account-card-heading h3 {
+    margin-bottom: 0;
+    font-size: 1.12rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.25;
+}
+
+.quick-action-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.quick-action-card {
+    display: grid;
+    min-height: 142px;
+    align-content: start;
+    gap: 8px;
+    padding: 17px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff, #f8f9ff);
+    transition:
+        transform var(--transition-fast),
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.quick-action-card:hover {
+    border-color: rgba(91, 92, 246, 0.34);
+    box-shadow: var(--shadow-small);
+    transform: translateY(-4px);
+}
+
+.quick-action-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 13px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+}
+
+.quick-action-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.quick-action-card strong {
+    color: var(--color-text);
+    font-size: 0.94rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.quick-action-card small {
+    color: var(--color-text-soft);
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.status-list {
+    display: grid;
+    gap: 12px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: #fbfcff;
+}
+
+.status-item span {
+    color: var(--color-text-soft);
+    font-size: 0.83rem;
+    font-weight: 700;
+}
+
+.status-item strong {
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-align: right;
+}
+
+.mini-recommendation-list {
+    display: grid;
+    gap: 10px;
+}
+
+.mini-recommendation-list a {
+    display: grid;
+    gap: 3px;
+    padding: 14px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: #fbfcff;
+    transition:
+        transform var(--transition-fast),
+        border-color var(--transition-fast),
+        background-color var(--transition-fast);
+}
+
+.mini-recommendation-list a:hover {
+    border-color: rgba(91, 92, 246, 0.28);
+    background: #f6f7ff;
+    transform: translateY(-2px);
+}
+
+.mini-recommendation-list strong {
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.mini-recommendation-list small {
+    color: var(--color-text-soft);
+    font-size: 0.76rem;
+}
+
+.next-step-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.next-step-list li {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: #fbfcff;
+}
+
+.next-step-list li > span {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.next-step-list strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.next-step-list small {
+    display: block;
+    color: var(--color-text-soft);
+    font-size: 0.75rem;
+    line-height: 1.55;
+}
+
+
 /* =========================================================
    10. PENCARIAN KAMPUS
    ========================================================= */
@@ -1095,6 +1513,16 @@ ul {
     color: var(--color-primary-dark);
 }
 
+.search-notice {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px solid rgba(91, 92, 246, 0.22);
+    border-radius: 14px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+    font-size: 0.86rem;
+    font-weight: 600;
+}
 
 /* =========================================================
    11. KATEGORI PROGRAM STUDI
@@ -1970,8 +2398,26 @@ html:not(.js-enabled) .hero-visual {
         grid-row: 1;
     }
 
-    .button-login {
+    .button-login,
+    .button-ghost-header {
         display: none;
+    }
+
+
+    .user-home-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .user-home-panel-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .next-step-list {
+        grid-template-columns: 1fr;
     }
 
     .primary-navigation {
@@ -2158,6 +2604,33 @@ html:not(.js-enabled) .hero-visual {
         align-items: flex-start;
         flex-direction: column;
         gap: 10px;
+    }
+
+    .user-home-section {
+        padding-block: 54px;
+    }
+
+    .user-home-shell {
+        padding: 20px;
+        border-radius: 22px;
+    }
+
+    .user-home-meta,
+    .meta-pill {
+        width: 100%;
+    }
+
+    .meta-pill strong {
+        max-width: 100%;
+    }
+
+    .quick-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .user-panel-card {
+        padding: 18px;
+        border-radius: 18px;
     }
 
     .hero-visual,

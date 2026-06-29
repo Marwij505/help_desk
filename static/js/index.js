@@ -833,9 +833,9 @@ document.addEventListener("DOMContentLoaded", function () {
                    Form tidak dihentikan jika valid.
 
                    Data pencarian akan dikirim ke:
-                   GET /pencarian?q=kata-kunci
+                   GET /search?q=kata-kunci
 
-                   Route tersebut nantinya diproses Flask.
+                   Route tersebut diproses oleh Flask melalui endpoint /search.
                 */
                 announce(
                     `Mencari ${inputElement.value}.`

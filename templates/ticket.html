@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- =========================================================
+         HALAMAN TICKET HELP DESK - BABAK 3
+         File ini sengaja dipisah dari index.html agar proyek rapi.
+         Index tetap menjadi homepage + area akun.
+         Ticket menjadi modul khusus untuk form dan daftar tiket.
+         ========================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Halaman Help Desk Ticketing Compass Campus untuk mengirim dan memantau tiket bantuan."
+    >
+    <meta name="author" content="Compass Campus Team">
+
+    <title>Ticket Help Desk | Compass Campus</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/ticket.css') }}"
+    >
+</head>
+
+<body class="ticket-page">
+
+    <!-- =========================================================
+         KUMPULAN IKON SVG
+         Disimpan langsung agar tidak perlu library eksternal.
+         ========================================================= -->
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-compass" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M15.5 8.5 14 14l-5.5 1.5L10 10z"></path>
+        </symbol>
+
+        <symbol id="icon-ticket" viewBox="0 0 24 24">
+            <path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"></path>
+            <path d="M13 5v2"></path>
+            <path d="M13 11v2"></path>
+            <path d="M13 17v2"></path>
+        </symbol>
+
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+        </symbol>
+
+        <symbol id="icon-home" viewBox="0 0 24 24">
+            <path d="M3 11 12 3l9 8"></path>
+            <path d="M5 10v10h14V10"></path>
+            <path d="M9 20v-6h6v6"></path>
+        </symbol>
+
+        <symbol id="icon-user" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 21a8 8 0 0 1 16 0"></path>
+        </symbol>
+    </svg>
+
+
+    <!-- =========================================================
+         HEADER SEDERHANA MODUL TICKET
+         ========================================================= -->
+    <header class="ticket-header">
+        <div class="container ticket-header-container">
+            <a href="{{ url_for('index') }}" class="brand" aria-label="Kembali ke beranda Compass Campus">
+                <span class="brand-icon">
+                    <svg aria-hidden="true"><use href="#icon-compass"></use></svg>
+                </span>
+                <span class="brand-text">
+                    <strong>Compass Campus</strong>
+                    <small>Help Desk Ticket</small>
+                </span>
+            </a>
+
+            <nav class="ticket-nav" aria-label="Navigasi halaman ticket">
+                <a href="{{ url_for('index') }}">
+                    <svg aria-hidden="true"><use href="#icon-home"></use></svg>
+                    Beranda
+                </a>
+
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.logout') }}" class="nav-danger">
+                        Keluar
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login', next=url_for('ticket')) }}" class="nav-primary">
+                        Masuk
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+
+    <!-- =========================================================
+         KONTEN UTAMA TICKETING
+         ========================================================= -->
+    <main class="ticket-main" id="ticket-page">
+        <section class="ticket-hero">
+            <div class="container ticket-hero-grid">
+                <div class="ticket-hero-content">
+                    <span class="eyebrow">Babak 3 · Help Desk Ticketing</span>
+                    <h1>Ajukan pertanyaan dan pantau status bantuanmu.</h1>
+                    <p>
+                        Gunakan halaman ini untuk membuat tiket bantuan terkait program studi,
+                        pemetaan minat, akun, data kampus, atau kendala lain di Compass Campus.
+                    </p>
+                </div>
+
+                <aside class="ticket-user-card">
+                    {% if current_user.is_authenticated %}
+                        <span class="avatar">{{ current_user.full_name[:1] }}</span>
+                        <div>
+                            <small>Login sebagai</small>
+                            <strong>{{ current_user.full_name }}</strong>
+                            <p>{{ current_user.email }}</p>
+                        </div>
+                    {% else %}
+                        <span class="avatar">?</span>
+                        <div>
+                            <small>Status akun</small>
+                            <strong>Belum masuk</strong>
+                            <p>Login dulu agar tiket bisa tersimpan.</p>
+                        </div>
+                    {% endif %}
+                </aside>
+            </div>
+        </section>
+
+
+        <section class="ticket-section">
+            <div class="container">
+
+                <!-- Pesan sukses atau error dari backend Flask -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="ticket-flash-list" role="status" aria-live="polite">
+                            {% for category, message in messages %}
+                                <div class="ticket-flash ticket-flash-{{ category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+
+                <div class="ticket-layout">
+                    {% if current_user.is_authenticated %}
+
+                        <!-- =================================================
+                             FORM MEMBUAT TIKET BARU
+                             Data dikirim ke route Flask: create_ticket
+                             ================================================= -->
+                        <article class="ticket-card ticket-form-card">
+                            <div class="ticket-card-heading">
+                                <span>Buat Tiket Baru</span>
+                                <h2>Tulis pertanyaanmu dengan jelas.</h2>
+                                <p>
+                                    Judul yang spesifik dan kronologi yang rapi membuat admin
+                                    lebih cepat memahami kebutuhanmu.
+                                </p>
+                            </div>
+
+                            <form
+                                class="ticket-form"
+                                action="{{ url_for('create_ticket') }}"
+                                method="POST"
+                                data-ticket-form
+                            >
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <div class="ticket-form-row">
+                                    <label for="ticket-category">Kategori</label>
+                                    <select id="ticket-category" name="category" required>
+                                        {% for value, label in ticket_category_options %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="ticket-form-row">
+                                    <label for="ticket-priority">Prioritas</label>
+                                    <select id="ticket-priority" name="priority" required>
+                                        {% for value, label in ticket_priority_options %}
+                                            <option value="{{ value }}" {% if value == 'normal' %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="ticket-form-row ticket-form-row-full">
+                                    <label for="ticket-subject">Judul Tiket</label>
+                                    <input
+                                        type="text"
+                                        id="ticket-subject"
+                                        name="subject"
+                                        placeholder="Contoh: Bingung memilih Teknik Informatika atau Sistem Informasi"
+                                        minlength="5"
+                                        maxlength="120"
+                                        required
+                                    >
+                                    <small>Minimal 5 karakter. Maksimal 120 karakter.</small>
+                                </div>
+
+                                <div class="ticket-form-row ticket-form-row-full">
+                                    <label for="ticket-message">Isi Pertanyaan</label>
+                                    <textarea
+                                        id="ticket-message"
+                                        name="message"
+                                        rows="7"
+                                        placeholder="Ceritakan pertanyaan atau kendala kamu secara singkat dan jelas."
+                                        minlength="15"
+                                        maxlength="2000"
+                                        required
+                                        data-ticket-message
+                                    ></textarea>
+                                    <small><span data-ticket-counter>0</span>/2000 karakter</small>
+                                </div>
+
+                                <button type="submit" class="button button-primary ticket-submit-button" data-ticket-submit>
+                                    Kirim Tiket
+                                    <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                                </button>
+                            </form>
+                        </article>
+
+
+                        <!-- =================================================
+                             RINGKASAN DAN DAFTAR TIKET USER
+                             Data diambil dari database lewat app.py
+                             ================================================= -->
+                        <aside class="ticket-card ticket-list-card">
+                            <div class="ticket-card-heading">
+                                <span>Tiket Saya</span>
+                                <h2>Status bantuanmu.</h2>
+                                <p>Lihat tiket terbaru yang sudah kamu kirim.</p>
+                            </div>
+
+                            <div class="ticket-summary-grid">
+                                <div>
+                                    <strong>{{ ticket_summary.total }}</strong>
+                                    <span>Total</span>
+                                </div>
+                                <div>
+                                    <strong>{{ ticket_summary.submitted }}</strong>
+                                    <span>Dikirim</span>
+                                </div>
+                                <div>
+                                    <strong>{{ ticket_summary.in_progress }}</strong>
+                                    <span>Diproses</span>
+                                </div>
+                                <div>
+                                    <strong>{{ ticket_summary.closed }}</strong>
+                                    <span>Selesai</span>
+                                </div>
+                            </div>
+
+                            {% if user_tickets %}
+                                <div class="ticket-list">
+                                    {% for ticket in user_tickets %}
+                                        <article class="ticket-item">
+                                            <div class="ticket-item-top">
+                                                <span class="ticket-code">{{ ticket.ticket_code }}</span>
+                                                <span class="ticket-status ticket-status-{{ ticket.status }}">
+                                                    {{ ticket.status_label }}
+                                                </span>
+                                            </div>
+
+                                            <h3>{{ ticket.subject }}</h3>
+                                            <p>
+                                                {{ ticket.message[:140] }}{% if ticket.message|length > 140 %}...{% endif %}
+                                            </p>
+
+                                            <div class="ticket-meta">
+                                                <span>{{ ticket.category_label }}</span>
+                                                <span>{{ ticket.priority_label }}</span>
+                                                <span>{{ ticket.created_label }}</span>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="ticket-empty-state">
+                                    <svg aria-hidden="true"><use href="#icon-ticket"></use></svg>
+                                    <strong>Belum ada tiket.</strong>
+                                    <p>Tiket yang kamu kirim akan tampil di sini.</p>
+                                </div>
+                            {% endif %}
+                        </aside>
+
+                    {% else %}
+
+                        <!-- Tampilan jika user belum login -->
+                        <article class="ticket-card ticket-login-card">
+                            <div class="ticket-login-icon">
+                                <svg aria-hidden="true"><use href="#icon-ticket"></use></svg>
+                            </div>
+                            <h2>Masuk untuk membuat tiket bantuan.</h2>
+                            <p>
+                                Sistem tiket membutuhkan akun agar pertanyaan, status,
+                                dan riwayat bantuan tersimpan dengan aman.
+                            </p>
+                            <a href="{{ url_for('auth.login', next=url_for('ticket')) }}" class="button button-primary">
+                                Masuk dan Buat Tiket
+                                <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            </a>
+                        </article>
+
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+    <script
+        src="{{ url_for('static', filename='js/ticket.js') }}"
+        defer
+    ></script>
+</body>
+</html>

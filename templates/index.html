@@ -24,15 +24,11 @@
 
     <title>Compass Campus | Temukan Arah Masa Depanmu</title>
 
-    <!-- Setelah Flask aktif, gunakan:
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/index.css') }}">
-    -->
-
     <link
         rel="stylesheet"
-        href="../static/css/index.css"
+        href="{{ url_for('static', filename='css/index.css') }}"
     >
+
 </head>
 
 <body>
@@ -170,7 +166,7 @@
         <div class="container header-container">
 
             <!-- Logo dan nama website -->
-            <a href="/" class="brand" aria-label="Compass Campus Beranda">
+            <a href="{{ url_for('index') }}" class="brand" aria-label="Compass Campus Beranda">
 
                 <span class="brand-icon">
                     <svg aria-hidden="true">
@@ -223,13 +219,22 @@
                     FAQ
                 </a>
 
-                <!--
-                    Tiket Saya nantinya akan meminta pengguna login
-                    apabila pengguna belum memiliki sesi akun.
-                -->
-                <a href="/tiket-saya" class="nav-link">
-                    Tiket Saya
-                </a>
+                {% if current_user.is_authenticated %}
+                    <a href="#akun-saya" class="nav-link">
+                        Akun Saya
+                    </a>
+
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        Keluar
+                    </a>
+                {% else %}
+                    <a
+                        href="{{ url_for('auth.login', next=url_for('ticket')) }}"
+                        class="nav-link"
+                    >
+                        Tiket Saya
+                    </a>
+                {% endif %}
             </nav>
 
 
@@ -247,9 +252,19 @@
                     </svg>
                 </button>
 
-                <a href="login.html" class="button button-login">
-                    Masuk
-                </a>
+                {% if current_user.is_authenticated %}
+                    <a href="#akun-saya" class="button button-login button-account">
+                        Akun Saya
+                    </a>
+
+                    <a href="{{ url_for('auth.logout') }}" class="button button-ghost-header">
+                        Keluar
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="button button-login">
+                        Masuk
+                    </a>
+                {% endif %}
 
             </div>
 
@@ -298,16 +313,29 @@
 
                     <div class="hero-buttons">
 
-                        <a
-                            href="#rekomendasi"
-                            class="button button-primary"
-                        >
-                            Mulai Pemetaan Minat
+                        {% if current_user.is_authenticated %}
+                            <a
+                                href="#akun-saya"
+                                class="button button-primary"
+                            >
+                                Lanjutkan Aktivitas
 
-                            <svg aria-hidden="true">
-                                <use href="#icon-arrow-right"></use>
-                            </svg>
-                        </a>
+                                <svg aria-hidden="true">
+                                    <use href="#icon-arrow-right"></use>
+                                </svg>
+                            </a>
+                        {% else %}
+                            <a
+                                href="{{ url_for('auth.register') }}"
+                                class="button button-primary"
+                            >
+                                Mulai Sekarang
+
+                                <svg aria-hidden="true">
+                                    <use href="#icon-arrow-right"></use>
+                                </svg>
+                            </a>
+                        {% endif %}
 
                         <a
                             href="#program-studi"
@@ -407,6 +435,255 @@
             </div>
 
         </section>
+
+        <!-- =====================================================
+             AREA AKUN PENGGUNA DI HOMEPAGE
+             Babak 2:
+             - Tidak memakai halaman terpisah.
+             - Section ini hanya tampil setelah pengguna login.
+             - Semua aksi tetap berada di index.html agar alur aplikasi sederhana.
+             ===================================================== -->
+        {% if current_user.is_authenticated %}
+            <section
+                class="user-home-section reveal"
+                id="akun-saya"
+                data-animation="fade-up"
+                aria-labelledby="user-home-title"
+            >
+
+                <div class="container">
+
+                    <!-- Panel utama akun pengguna -->
+                    <div class="user-home-shell">
+
+                        <!-- Sapaan dan konteks penggunaan akun -->
+                        <div class="user-home-hero">
+
+                            <div class="user-home-content">
+
+                                <span class="section-label">
+                                    Area Akun
+                                </span>
+
+                                <h2 id="user-home-title">
+                                    Halo, {{ current_user.full_name }}
+                                </h2>
+
+                                <p>
+                                    Selamat datang kembali di Compass Campus.
+                                    Dari halaman ini kamu bisa melanjutkan pencarian kampus,
+                                    melihat rekomendasi awal, memantau bantuan, dan mengelola
+                                    arah pilihan studi tanpa masuk ke halaman halaman terpisah.
+                                </p>
+
+                                <!-- Metadata akun dibuat ringkas agar mudah dicek pengguna -->
+                                <div class="user-home-meta" aria-label="Informasi singkat akun">
+                                    <span class="meta-pill">
+                                        <small>Email</small>
+                                        <strong>{{ current_user.email }}</strong>
+                                    </span>
+
+                                    <span class="meta-pill">
+                                        <small>Status</small>
+                                        <strong>Akun Aktif</strong>
+                                    </span>
+
+                                    <span class="meta-pill">
+                                        <small>Role</small>
+                                        <strong>{{ current_user.role|title }}</strong>
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <!-- Kartu profil ringkas untuk memberi rasa aplikasi personal -->
+                            <aside class="user-profile-card" aria-label="Ringkasan profil akun">
+
+                                <div class="user-avatar" aria-hidden="true">
+                                    {{ current_user.full_name[:1]|upper }}
+                                </div>
+
+                                <div class="user-profile-info">
+                                    <span>Profil Pengguna</span>
+                                    <strong>{{ current_user.full_name }}</strong>
+                                    <small>{{ current_user.email }}</small>
+                                </div>
+
+                                <a
+                                    href="{{ url_for('auth.logout') }}"
+                                    class="user-profile-logout"
+                                    data-no-transition
+                                >
+                                    Keluar
+                                </a>
+
+                            </aside>
+
+                        </div>
+
+
+                        <!-- Aksi cepat pengguna setelah login -->
+                        <div class="user-home-panel-grid">
+
+                            <article class="user-panel-card user-panel-card-wide">
+
+                                <div class="account-card-heading">
+                                    <span>Aksi Cepat</span>
+                                    <h3>Lanjutkan aktivitasmu</h3>
+                                </div>
+
+                                <div class="quick-action-grid">
+
+                                    <a href="#program-studi" class="quick-action-card">
+                                        <span class="quick-action-icon">
+                                            <svg aria-hidden="true">
+                                                <use href="#icon-search"></use>
+                                            </svg>
+                                        </span>
+                                        <strong>Cari Kampus</strong>
+                                        <small>Temukan kampus dan prodi.</small>
+                                    </a>
+
+                                    <a href="#rekomendasi" class="quick-action-card">
+                                        <span class="quick-action-icon">
+                                            <svg aria-hidden="true">
+                                                <use href="#icon-interest"></use>
+                                            </svg>
+                                        </span>
+                                        <strong>Pemetaan Minat</strong>
+                                        <small>Cek arah bidang studi.</small>
+                                    </a>
+
+                                    <a href="#rekomendasi" class="quick-action-card">
+                                        <span class="quick-action-icon">
+                                            <svg aria-hidden="true">
+                                                <use href="#icon-sparkle"></use>
+                                            </svg>
+                                        </span>
+                                        <strong>Rekomendasi</strong>
+                                        <small>Lihat pilihan awal.</small>
+                                    </a>
+
+                                    <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}" class="quick-action-card">
+                                        <span class="quick-action-icon">
+                                            <svg aria-hidden="true">
+                                                <use href="#icon-ticket"></use>
+                                            </svg>
+                                        </span>
+                                        <strong>Help Desk</strong>
+                                        <small>Kirim kendala dan pertanyaan.</small>
+                                    </a>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Ringkasan status akun. Angka tiket diambil dari database Babak 3. -->
+                            <article class="user-panel-card">
+
+                                <div class="account-card-heading">
+                                    <span>Ringkasan</span>
+                                    <h3>Status aktivitas</h3>
+                                </div>
+
+                                <div class="status-list">
+
+                                    <div class="status-item">
+                                        <span>Program tersimpan</span>
+                                        <strong>0</strong>
+                                    </div>
+
+                                    <div class="status-item">
+                                        <span>Tiket aktif</span>
+                                        <strong>{{ ticket_summary.active }}</strong>
+                                    </div>
+
+                                    <div class="status-item">
+                                        <span>Pemetaan minat</span>
+                                        <strong>Belum diisi</strong>
+                                    </div>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Preview rekomendasi dibuat statis sampai modul rekomendasi aktif -->
+                            <article class="user-panel-card">
+
+                                <div class="account-card-heading">
+                                    <span>Rekomendasi Awal</span>
+                                    <h3>Bidang yang bisa kamu jelajahi</h3>
+                                </div>
+
+                                <div class="mini-recommendation-list">
+
+                                    <a href="{{ url_for('search', q='Teknik Informatika') }}">
+                                        <strong>Teknik Informatika</strong>
+                                        <small>Teknologi, data, software</small>
+                                    </a>
+
+                                    <a href="{{ url_for('search', q='Sistem Informasi') }}">
+                                        <strong>Sistem Informasi</strong>
+                                        <small>Bisnis, teknologi, sistem</small>
+                                    </a>
+
+                                    <a href="{{ url_for('search', q='Manajemen') }}">
+                                        <strong>Manajemen</strong>
+                                        <small>Organisasi, bisnis, strategi</small>
+                                    </a>
+
+                                </div>
+
+                            </article>
+
+
+                            <!-- Checklist memberi arah pengembangan fitur berikutnya -->
+                            <article class="user-panel-card user-panel-card-wide">
+
+                                <div class="account-card-heading">
+                                    <span>Langkah Berikutnya</span>
+                                    <h3>Mulai dari tiga langkah sederhana</h3>
+                                </div>
+
+                                <ol class="next-step-list">
+                                    <li>
+                                        <span>1</span>
+                                        <div>
+                                            <strong>Cari program studi incaran</strong>
+                                            <small>Gunakan pencarian untuk menemukan jurusan sesuai minat.</small>
+                                        </div>
+                                    </li>
+
+                                    <li>
+                                        <span>2</span>
+                                        <div>
+                                            <strong>Bandingkan pilihan</strong>
+                                            <small>Lihat kategori, bidang ilmu, dan arah karier.</small>
+                                        </div>
+                                    </li>
+
+                                    <li>
+                                        <span>3</span>
+                                        <div>
+                                            <strong>Kirim pertanyaan bila perlu</strong>
+                                            <small>Gunakan Help Desk jika butuh bantuan tambahan.</small>
+                                        </div>
+                                    </li>
+                                </ol>
+
+                            </article>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+        {% endif %}
 
 
         <!-- =====================================================
@@ -533,7 +810,7 @@
                             atau laporkan masalah kepada tim bantuan ComCam.
                         </p>
 
-                        <a href="/buat-tiket" class="card-link">
+                        <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}" class="card-link">
                             Buat Tiket
 
                             <svg aria-hidden="true">
@@ -653,7 +930,7 @@
                     <!-- Form pencarian utama -->
                     <form
                         class="main-search-form"
-                        action="/pencarian"
+                        action="{{ url_for('search') }}"
                         method="GET"
                         role="search"
                     >
@@ -672,6 +949,7 @@
                                 type="search"
                                 id="main-search-input"
                                 name="q"
+                                value="{{ search_query|default('', true) }}"
                                 placeholder="Cari kampus, program studi, kota, atau bidang ilmu..."
                                 autocomplete="off"
                                 required
@@ -691,23 +969,30 @@
 
                         <span>Pencarian populer:</span>
 
-                        <a href="/pencarian?q=Teknik+Informatika">
+                        <a href="{{ url_for('search', q='Teknik Informatika') }}">
                             Teknik Informatika
                         </a>
 
-                        <a href="/pencarian?q=Sistem+Informasi">
+                        <a href="{{ url_for('search', q='Sistem Informasi') }}">
                             Sistem Informasi
                         </a>
 
-                        <a href="/pencarian?q=Manajemen">
+                        <a href="{{ url_for('search', q='Manajemen') }}">
                             Manajemen
                         </a>
 
-                        <a href="/pencarian?q=Desain+Komunikasi+Visual">
+                        <a href="{{ url_for('search', q='Desain Komunikasi Visual') }}">
                             Desain Komunikasi Visual
                         </a>
 
                     </div>
+
+                    <!-- Pesan notifikasi jika pencarian tidak ditemukan -->
+                    {% if search_notice %}
+                        <div class="search-notice" role="status">
+                            {{ search_notice }}
+                        </div>
+                    {% endif %}
 
                 </div>
 
@@ -736,7 +1021,7 @@
                         </h2>
                     </div>
 
-                    <a href="/program-studi" class="view-all-link">
+                    <a href="#program-studi" class="view-all-link">
                         Lihat Semua Program Studi
 
                         <svg aria-hidden="true">
@@ -750,7 +1035,7 @@
                 <div class="study-category-grid">
 
                     <a
-                        href="/program-studi?bidang=teknologi"
+                        href="{{ url_for('search', q='Komputer dan Teknologi') }}"
                         class="study-category-card"
                     >
                         <div class="category-icon">💻</div>
@@ -766,7 +1051,7 @@
 
 
                     <a
-                        href="/program-studi?bidang=bisnis"
+                        href="{{ url_for('search', q='Ekonomi dan Bisnis') }}"
                         class="study-category-card"
                     >
                         <div class="category-icon">📊</div>
@@ -782,7 +1067,7 @@
 
 
                     <a
-                        href="/program-studi?bidang=kesehatan"
+                        href="{{ url_for('search', q='Kesehatan') }}"
                         class="study-category-card"
                     >
                         <div class="category-icon">🩺</div>
@@ -798,7 +1083,7 @@
 
 
                     <a
-                        href="/program-studi?bidang=teknik"
+                        href="{{ url_for('search', q='Teknik dan Rekayasa') }}"
                         class="study-category-card"
                     >
                         <div class="category-icon">⚙️</div>
@@ -814,7 +1099,7 @@
 
 
                     <a
-                        href="/program-studi?bidang=sosial"
+                        href="{{ url_for('search', q='Sosial dan Komunikasi') }}"
                         class="study-category-card"
                     >
                         <div class="category-icon">🤝</div>
@@ -830,7 +1115,7 @@
 
 
                     <a
-                        href="/program-studi?bidang=seni"
+                        href="{{ url_for('search', q='Desain dan Seni') }}"
                         class="study-category-card"
                     >
                         <div class="category-icon">🎨</div>
@@ -906,7 +1191,10 @@
 
                     </ul>
 
-                    <a href="/pemetaan-minat" class="button button-light">
+                    <a
+                        href="#rekomendasi"
+                        class="button button-light"
+                    >
                         Mulai Pemetaan Minat
 
                         <svg aria-hidden="true">
@@ -1191,7 +1479,7 @@
         <!-- =====================================================
              CALL TO ACTION HELP DESK
              ===================================================== -->
-        <section class="help-cta-section">
+        <section class="help-cta-section" id="help-desk">
 
             <div class="container help-cta-container">
 
@@ -1210,7 +1498,10 @@
                     </p>
                 </div>
 
-                <a href="/buat-tiket" class="button button-light">
+                <a
+                    href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}"
+                    class="button button-light"
+                >
                     Buat Tiket Bantuan
 
                     <svg aria-hidden="true">
@@ -1235,7 +1526,7 @@
             <!-- Informasi brand -->
             <div class="footer-brand-column">
 
-                <a href="/" class="brand footer-brand">
+                <a href="{{ url_for('index') }}" class="brand footer-brand">
 
                     <span class="brand-icon">
                         <svg aria-hidden="true">
@@ -1264,51 +1555,56 @@
 
                 <h2>Jelajahi</h2>
 
-                <a href="/kampus">Cari Kampus</a>
-                <a href="/program-studi">Program Studi</a>
-                <a href="/pemetaan-minat">Pemetaan Minat</a>
-                <a href="/perbandingan">Bandingkan Pilihan</a>
+                <a href="#program-studi">Cari Kampus</a>
+                <a href="#program-studi">Program Studi</a>
+                <a href="#rekomendasi">Pemetaan Minat</a>
+                <a href="#rekomendasi">Bandingkan Pilihan</a>
 
             </div>
 
 
-            <!-- Menu bantuan -->
             <div class="footer-column">
 
                 <h2>Bantuan</h2>
 
-                <a href="/faq">FAQ</a>
-                <a href="/buat-tiket">Buat Tiket</a>
-                <a href="/tiket-saya">Tiket Saya</a>
-                <a href="/laporkan-data">Laporkan Kesalahan Data</a>
+                <a href="#faq">FAQ</a>
+
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('ticket') }}">Buat Tiket</a>
+                    <a href="{{ url_for('ticket') }}">Tiket Saya</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login', next=url_for('ticket')) }}">Buat Tiket</a>
+                    <a href="{{ url_for('auth.login', next=url_for('ticket')) }}">Tiket Saya</a>
+                {% endif %}
+
+                <a href="#faq">Laporkan Kesalahan Data</a>
 
             </div>
 
 
-            <!-- Menu perusahaan -->
             <div class="footer-column">
 
                 <h2>Compass Campus</h2>
 
-                <a href="/tentang">Tentang ComCam</a>
-                <a href="/sumber-data">Sumber Data</a>
-                <a href="/kontak">Hubungi Kami</a>
-                <a href="/kerja-sama">Kerja Sama</a>
+                <a href="#beranda">Tentang ComCam</a>
+                <a href="#program-studi">Sumber Data</a>
+                <a href="#faq">Hubungi Kami</a>
+                <a href="#rekomendasi">Kerja Sama</a>
 
             </div>
 
 
-            <!-- Menu kebijakan -->
             <div class="footer-column">
 
                 <h2>Kebijakan</h2>
 
-                <a href="/privasi">Kebijakan Privasi</a>
-                <a href="/syarat-ketentuan">Syarat dan Ketentuan</a>
-                <a href="/aksesibilitas">Aksesibilitas</a>
-                <a href="/disclaimer">Disclaimer</a>
+                <a href="#faq">Kebijakan Privasi</a>
+                <a href="#faq">Syarat dan Ketentuan</a>
+                <a href="#faq">Aksesibilitas</a>
+                <a href="#faq">Disclaimer</a>
 
             </div>
+
 
         </div>
 
@@ -1372,7 +1668,7 @@
 
             <form
                 class="global-search-form"
-                action="/pencarian"
+                action="{{ url_for('search') }}"
                 method="GET"
                 role="search"
             >
@@ -1418,14 +1714,9 @@
     </div>
 
     <script
-        src="../static/js/index.js"
+        src="{{ url_for('static', filename='js/index.js') }}"
         defer
     ></script>
-
-    <!-- Setelah Flask aktif:
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='js/index.js') }}">
-    -->
 
 </body>
 </html>
