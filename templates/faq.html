@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- =========================================================
+         FAQ COMPASS CAMPUS
+         Halaman ini menjadi pusat bantuan lengkap dari link footer:
+         Jelajahi, Bantuan, Compass Campus, dan Kebijakan.
+         ========================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ dan Pusat Informasi | Compass Campus</title>
+
+    <meta
+        name="description"
+        content="FAQ Compass Campus berisi panduan pencarian kampus, program studi, tiket bantuan, kebijakan, dan informasi penggunaan platform."
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/faq.css') }}"
+    >
+</head>
+
+<body class="faq-page">
+
+    <!-- =========================================================
+         SVG SPRITE RINGAN
+         Ikon disimpan di halaman agar tidak bergantung library luar.
+         ========================================================= -->
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-compass" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M15.5 8.5 14 14l-5.5 1.5L10 10z"></path>
+        </symbol>
+
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16 16 4 4"></path>
+        </symbol>
+
+        <symbol id="icon-home" viewBox="0 0 24 24">
+            <path d="M3 11 12 3l9 8"></path>
+            <path d="M5 10v11h14V10"></path>
+            <path d="M9 21v-6h6v6"></path>
+        </symbol>
+
+        <symbol id="icon-ticket" viewBox="0 0 24 24">
+            <path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"></path>
+            <path d="M13 5v2"></path>
+            <path d="M13 11v2"></path>
+            <path d="M13 17v2"></path>
+        </symbol>
+
+        <symbol id="icon-shield" viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+        </symbol>
+
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+        </symbol>
+
+        <symbol id="icon-plus" viewBox="0 0 24 24">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+        </symbol>
+
+        <symbol id="icon-sparkle" viewBox="0 0 24 24">
+            <path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"></path>
+            <path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path>
+        </symbol>
+    </svg>
+
+
+    <!-- =========================================================
+         HEADER
+         Sesuai base style ComCam: gelap, clean, dan responsif.
+         ========================================================= -->
+    <header class="faq-header">
+        <div class="container faq-header-inner">
+
+            <a href="{{ url_for('index') }}" class="brand" aria-label="Kembali ke Beranda Compass Campus">
+                <span class="brand-icon">
+                    <svg aria-hidden="true">
+                        <use href="#icon-compass"></use>
+                    </svg>
+                </span>
+
+                <span class="brand-text">
+                    <strong>Compass Campus</strong>
+                    <small>Pusat Informasi</small>
+                </span>
+            </a>
+
+            <nav class="faq-nav" aria-label="Navigasi FAQ">
+                <a href="{{ url_for('index') }}">Beranda</a>
+                <a href="{{ url_for('index') }}#program-studi">Program Studi</a>
+                <a href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}">Rekomendasi</a>
+                <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}">Tiket Saya</a>
+            </nav>
+
+            <div class="header-actions">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('profile') }}" class="button button-primary">Akun Saya</a>
+                    <a href="{{ url_for('auth.logout') }}" class="button button-outline">Keluar</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="button button-primary">Masuk</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </header>
+
+
+    <main>
+
+        <!-- =====================================================
+             HERO FAQ
+             Menjelaskan fungsi halaman dan memberi pencarian cepat.
+             ===================================================== -->
+        <section class="faq-hero">
+            <div class="container faq-hero-grid">
+
+                <div class="faq-hero-content reveal">
+                    <div class="eyebrow">
+                        <svg aria-hidden="true">
+                            <use href="#icon-sparkle"></use>
+                        </svg>
+                        <span>FAQ dan Pusat Bantuan</span>
+                    </div>
+
+                    <h1>
+                        Temukan jawaban sebelum membuat tiket bantuan.
+                    </h1>
+
+                    <p>
+                        Halaman ini merangkum pertanyaan tentang pencarian kampus,
+                        program studi, pemetaan minat, tiket bantuan, sumber data,
+                        privasi, dan kebijakan penggunaan Compass Campus.
+                    </p>
+
+                    <div class="faq-search-box">
+                        <svg aria-hidden="true">
+                            <use href="#icon-search"></use>
+                        </svg>
+
+                        <label for="faq-search-input" class="sr-only">
+                            Cari pertanyaan FAQ
+                        </label>
+
+                        <input
+                            type="search"
+                            id="faq-search-input"
+                            placeholder="Cari topik, misal: akreditasi, tiket, data kampus, privasi..."
+                            autocomplete="off"
+                        >
+                    </div>
+                </div>
+
+                <aside class="faq-hero-card reveal">
+                    <span class="hero-card-label">Status pengembangan</span>
+
+                    <h2>Data akan terus diperbarui</h2>
+
+                    <p>
+                        Informasi kampus dan program studi pada ComCam masih dapat
+                        dikembangkan lagi. Data final sebaiknya tetap diverifikasi
+                        dengan sumber resmi kampus, PDDikti, BAN-PT, atau LAM terkait.
+                    </p>
+
+                    <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}" class="mini-link">
+                        Buat tiket jika butuh bantuan
+                        <svg aria-hidden="true">
+                            <use href="#icon-arrow-right"></use>
+                        </svg>
+                    </a>
+                </aside>
+
+            </div>
+        </section>
+
+
+        <!-- =====================================================
+             KATEGORI CEPAT
+             Link footer diarahkan ke kategori-kategori ini.
+             ===================================================== -->
+        <section class="faq-category-section">
+            <div class="container">
+
+                <div class="category-tabs" aria-label="Kategori FAQ">
+                    <a href="#jelajahi" class="category-tab active" data-faq-category-link="jelajahi">
+                        Jelajahi
+                    </a>
+
+                    <a href="#bantuan" class="category-tab" data-faq-category-link="bantuan">
+                        Bantuan
+                    </a>
+
+                    <a href="#compass-campus" class="category-tab" data-faq-category-link="compass-campus">
+                        Compass Campus
+                    </a>
+
+                    <a href="#kebijakan" class="category-tab" data-faq-category-link="kebijakan">
+                        Kebijakan
+                    </a>
+                </div>
+
+                <div class="quick-info-grid">
+
+                    <article class="quick-info-card reveal">
+                        <span>01</span>
+                        <h2>Jelajahi</h2>
+                        <p>Panduan mencari kampus, program studi, detail jurusan, dan rekomendasi.</p>
+                    </article>
+
+                    <article class="quick-info-card reveal">
+                        <span>02</span>
+                        <h2>Bantuan</h2>
+                        <p>Panduan membuat tiket, melihat balasan admin, dan melaporkan kendala.</p>
+                    </article>
+
+                    <article class="quick-info-card reveal">
+                        <span>03</span>
+                        <h2>Compass Campus</h2>
+                        <p>Penjelasan fungsi ComCam, batasan data, dan cara platform membantu pengguna.</p>
+                    </article>
+
+                    <article class="quick-info-card reveal">
+                        <span>04</span>
+                        <h2>Kebijakan</h2>
+                        <p>Privasi akun, keamanan, batasan informasi, dan aksesibilitas penggunaan.</p>
+                    </article>
+
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- =====================================================
+             ISI FAQ
+             Setiap kategori dibuat sebagai section agar link footer
+             dapat langsung menuju bagian yang sesuai.
+             ===================================================== -->
+        <section class="faq-content-section">
+            <div class="container faq-layout">
+
+                <aside class="faq-sidebar">
+                    <p class="sidebar-label">Navigasi FAQ</p>
+
+                    <a href="#jelajahi" data-faq-category-link="jelajahi">
+                        Jelajahi
+                    </a>
+
+                    <a href="#bantuan" data-faq-category-link="bantuan">
+                        Bantuan
+                    </a>
+
+                    <a href="#compass-campus" data-faq-category-link="compass-campus">
+                        Compass Campus
+                    </a>
+
+                    <a href="#kebijakan" data-faq-category-link="kebijakan">
+                        Kebijakan
+                    </a>
+                </aside>
+
+
+                <div class="faq-content">
+
+                    <!-- KATEGORI JELAJAHI -->
+                    <section class="faq-group reveal" id="jelajahi" data-faq-group>
+                        <div class="faq-group-heading">
+                            <span>Jelajahi</span>
+                            <h2>Pencarian kampus dan program studi</h2>
+                            <p>
+                                Pertanyaan umum tentang cara memakai fitur pencarian,
+                                program studi, detail kampus, dan rekomendasi awal.
+                            </p>
+                        </div>
+
+                        <div class="accordion-list">
+                            <article class="faq-accordion" data-faq-item data-keywords="cari kampus program studi pencarian prodi jurusan">
+                                <button type="button" class="faq-question">
+                                    Bagaimana cara mencari kampus atau program studi?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Gunakan kolom pencarian di bagian Program Studi.
+                                        Kamu bisa mengetik nama kampus, nama program studi,
+                                        bidang ilmu, atau kata kunci seperti Informatika,
+                                        Manajemen, Akuntansi, Farmasi, Psikologi, dan Teknik Sipil.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="data tidak ditemukan hasil kosong pencarian salah">
+                                <button type="button" class="faq-question">
+                                    Mengapa hasil pencarian saya tidak ditemukan?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Data pada ComCam masih dalam tahap pengembangan.
+                                        Jika hasil belum tersedia, coba gunakan kata kunci yang
+                                        lebih umum, misalnya nama bidang ilmu atau nama kampus ternama.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="akreditasi program studi jurusan kampus">
+                                <button type="button" class="faq-question">
+                                    Apakah informasi akreditasi sudah final?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Belum sepenuhnya. Informasi akreditasi pada sistem perlu
+                                        diverifikasi kembali melalui sumber resmi seperti website kampus,
+                                        PDDikti, BAN-PT, atau LAM sesuai bidang program studi.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="detail prodi kurikulum karier fasilitas skill">
+                                <button type="button" class="faq-question">
+                                    Apa saja yang ada di halaman detail program studi?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Halaman detail berisi ringkasan kampus, deskripsi prodi,
+                                        kurikulum umum, prospek karier, skill yang dilatih,
+                                        fasilitas pendukung, dan program studi terkait.
+                                    </p>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+
+                    <!-- KATEGORI BANTUAN -->
+                    <section class="faq-group reveal" id="bantuan" data-faq-group>
+                        <div class="faq-group-heading">
+                            <span>Bantuan</span>
+                            <h2>Tiket bantuan dan komunikasi dengan admin</h2>
+                            <p>
+                                Panduan membuat tiket, melihat status bantuan, dan membaca
+                                balasan admin.
+                            </p>
+                        </div>
+
+                        <div class="accordion-list">
+                            <article class="faq-accordion" data-faq-item data-keywords="buat tiket bantuan pertanyaan admin">
+                                <button type="button" class="faq-question">
+                                    Bagaimana cara membuat tiket bantuan?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Login terlebih dahulu, buka menu Tiket Saya, lalu isi kategori,
+                                        prioritas, judul, dan isi pertanyaan. Setelah dikirim,
+                                        tiket akan masuk ke panel admin.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="status tiket dikirim diproses selesai">
+                                <button type="button" class="faq-question">
+                                    Apa arti status Dikirim, Diproses, dan Selesai?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Dikirim berarti tiket sudah diterima sistem. Diproses berarti
+                                        admin sedang meninjau pertanyaan. Selesai berarti admin sudah
+                                        memberi jawaban atau masalah sudah ditutup.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="balasan admin lihat detail tiket">
+                                <button type="button" class="faq-question">
+                                    Di mana saya melihat balasan admin?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Buka menu Tiket Saya, pilih tiket yang ingin dibaca,
+                                        lalu klik detail atau balasan. Percakapan user dan admin
+                                        ditampilkan di halaman detail tiket.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="lapor kesalahan data kampus prodi">
+                                <button type="button" class="faq-question">
+                                    Bagaimana jika saya menemukan data kampus yang salah?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Buat tiket dengan kategori data kampus atau program studi.
+                                        Sertakan nama kampus, nama program studi, bagian yang salah,
+                                        dan sumber pembanding jika ada.
+                                    </p>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+
+                    <!-- KATEGORI COMPASS CAMPUS -->
+                    <section class="faq-group reveal" id="compass-campus" data-faq-group>
+                        <div class="faq-group-heading">
+                            <span>Compass Campus</span>
+                            <h2>Tentang platform dan batasan informasi</h2>
+                            <p>
+                                Penjelasan tentang fungsi ComCam, cara sistem membantu pengguna,
+                                dan batasan data yang perlu dipahami.
+                            </p>
+                        </div>
+
+                        <div class="accordion-list">
+                            <article class="faq-accordion" data-faq-item data-keywords="apa itu compass campus comcam">
+                                <button type="button" class="faq-question">
+                                    Apa itu Compass Campus?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Compass Campus atau ComCam adalah platform bantuan
+                                        pemilihan program studi. Sistem ini membantu calon mahasiswa
+                                        mencari informasi, memetakan minat, membaca rekomendasi,
+                                        dan mengajukan pertanyaan melalui tiket bantuan.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="rekomendasi minat keputusan final">
+                                <button type="button" class="faq-question">
+                                    Apakah rekomendasi ComCam menentukan pilihan saya?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Tidak. Rekomendasi hanya membantu memberi arah awal.
+                                        Keputusan akhir tetap harus mempertimbangkan minat pribadi,
+                                        kemampuan, biaya, lokasi, prospek, dan informasi resmi kampus.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="sumber data pddikti banpt lam resmi kampus">
+                                <button type="button" class="faq-question">
+                                    Dari mana informasi kampus diperoleh?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Data pengembangan dapat mengacu pada website resmi kampus,
+                                        PDDikti, BAN-PT, LAM, brosur resmi, dan hasil research tim.
+                                        Pada tahap demo, data belum mewakili seluruh kampus Indonesia.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="kerja sama kampus konselor admin">
+                                <button type="button" class="faq-question">
+                                    Apakah ComCam bisa dikembangkan untuk kerja sama kampus?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Bisa. Pada pengembangan lanjutan, kampus atau konselor
+                                        dapat membantu memperbarui data, menjawab tiket,
+                                        dan memvalidasi informasi program studi.
+                                    </p>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+
+                    <!-- KATEGORI KEBIJAKAN -->
+                    <section class="faq-group reveal" id="kebijakan" data-faq-group>
+                        <div class="faq-group-heading">
+                            <span>Kebijakan</span>
+                            <h2>Privasi, keamanan, dan batasan penggunaan</h2>
+                            <p>
+                                Informasi dasar tentang akun, data pengguna, Remember Me,
+                                aksesibilitas, dan disclaimer.
+                            </p>
+                        </div>
+
+                        <div class="accordion-list">
+                            <article class="faq-accordion" data-faq-item data-keywords="privasi data akun pengguna">
+                                <button type="button" class="faq-question">
+                                    Data apa saja yang disimpan oleh ComCam?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Sistem menyimpan data akun, profil pengguna, tiket bantuan,
+                                        dan riwayat pemetaan minat. Data ini digunakan untuk
+                                        menampilkan pengalaman yang lebih personal di dalam aplikasi.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="remember me ingat saya session login">
+                                <button type="button" class="faq-question">
+                                    Apa fungsi Ingat Saya atau Remember Me?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Jika Ingat Saya aktif, akun dapat tetap dikenali lebih lama
+                                        setelah browser ditutup atau server dijalankan ulang.
+                                        Jika tidak aktif, pengguna akan diminta login ulang saat
+                                        session berakhir.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="password keamanan hash">
+                                <button type="button" class="faq-question">
+                                    Apakah password disimpan dalam bentuk asli?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Tidak. Password disimpan dalam bentuk hash, sehingga sistem
+                                        tidak menyimpan kata sandi asli secara langsung.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="disclaimer informasi resmi kampus">
+                                <button type="button" class="faq-question">
+                                    Apakah informasi di ComCam menggantikan informasi resmi kampus?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Tidak. ComCam adalah platform bantuan informasi.
+                                        Untuk keputusan akhir, pengguna tetap perlu memeriksa
+                                        website resmi kampus atau lembaga akreditasi terkait.
+                                    </p>
+                                </div>
+                            </article>
+
+                            <article class="faq-accordion" data-faq-item data-keywords="aksesibilitas mobile responsive">
+                                <button type="button" class="faq-question">
+                                    Apakah ComCam bisa digunakan di perangkat mobile?
+                                    <svg aria-hidden="true">
+                                        <use href="#icon-plus"></use>
+                                    </svg>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>
+                                        Ya. Tampilan dirancang responsif agar tetap nyaman dipakai
+                                        di desktop, tablet, dan ponsel.
+                                    </p>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <div class="no-result-message" id="faq-no-result" hidden>
+                        <h2>Pertanyaan belum ditemukan.</h2>
+                        <p>
+                            Coba gunakan kata kunci lain, atau buat tiket bantuan agar admin
+                            dapat membantu menjawab pertanyaanmu.
+                        </p>
+                        <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}" class="button button-primary">
+                            Buat Tiket Bantuan
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- =====================================================
+             CTA AKHIR
+             Mengarahkan user ke tiket jika FAQ belum cukup.
+             ===================================================== -->
+        <section class="faq-cta-section">
+            <div class="container">
+                <div class="faq-cta reveal">
+                    <div>
+                        <span>Belum menemukan jawaban?</span>
+                        <h2>Kirim pertanyaan melalui tiket bantuan.</h2>
+                        <p>
+                            Admin dapat membantu menjawab pertanyaan yang lebih spesifik
+                            terkait akun, data kampus, rekomendasi, atau kendala penggunaan.
+                        </p>
+                    </div>
+
+                    <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}" class="button button-light">
+                        Buat Tiket Bantuan
+                        <svg aria-hidden="true">
+                            <use href="#icon-arrow-right"></use>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- =========================================================
+         FOOTER
+         Konsisten dengan index, tetapi link diarahkan ke FAQ section.
+         ========================================================= -->
+    <footer class="faq-footer">
+        <div class="container footer-grid">
+
+            <div class="footer-brand-area">
+                <a href="{{ url_for('index') }}" class="brand footer-brand">
+                    <span class="brand-icon">
+                        <svg aria-hidden="true">
+                            <use href="#icon-compass"></use>
+                        </svg>
+                    </span>
+
+                    <span class="brand-text">
+                        <strong>Compass Campus</strong>
+                        <small>ComCam</small>
+                    </span>
+                </a>
+
+                <p>
+                    Platform informasi dan bantuan pendidikan tinggi untuk
+                    membantu calon mahasiswa memahami pilihan kampus dan program studi.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h2>Jelajahi</h2>
+                <a href="#jelajahi">Cari Kampus</a>
+                <a href="#jelajahi">Program Studi</a>
+                <a href="#jelajahi">Pemetaan Minat</a>
+                <a href="#jelajahi">Bandingkan Pilihan</a>
+            </div>
+
+            <div class="footer-column">
+                <h2>Bantuan</h2>
+                <a href="#bantuan">FAQ</a>
+                <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}">Buat Tiket</a>
+                <a href="{{ url_for('ticket') if current_user.is_authenticated else url_for('auth.login', next=url_for('ticket')) }}">Tiket Saya</a>
+                <a href="#bantuan">Laporkan Kesalahan Data</a>
+            </div>
+
+            <div class="footer-column">
+                <h2>Compass Campus</h2>
+                <a href="#compass-campus">Tentang ComCam</a>
+                <a href="#compass-campus">Sumber Data</a>
+                <a href="#compass-campus">Hubungi Kami</a>
+                <a href="#compass-campus">Kerja Sama</a>
+            </div>
+
+            <div class="footer-column">
+                <h2>Kebijakan</h2>
+                <a href="#kebijakan">Kebijakan Privasi</a>
+                <a href="#kebijakan">Syarat dan Ketentuan</a>
+                <a href="#kebijakan">Aksesibilitas</a>
+                <a href="#kebijakan">Disclaimer</a>
+            </div>
+
+        </div>
+
+        <div class="container footer-bottom">
+            <p>&copy; 2026 Compass Campus — ComCam. Seluruh hak cipta dilindungi.</p>
+            <p>Informasi pada ComCam tidak menggantikan informasi resmi dari masing-masing institusi pendidikan.</p>
+        </div>
+    </footer>
+
+    <script
+        src="{{ url_for('static', filename='js/faq.js') }}"
+        defer
+    ></script>
+</body>
+</html>

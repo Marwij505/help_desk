@@ -2240,6 +2240,37 @@ def create_app(
             "database": app.config["DB_NAME"],
         }, 200
     
+
+    # =====================================================
+    # 6A. ROUTE HALAMAN FAQ LENGKAP
+    # =====================================================
+
+    @app.get("/faq")
+    def faq():
+        """
+        Menampilkan halaman FAQ lengkap.
+
+        Halaman ini menampung pertanyaan dari kategori:
+        - Jelajahi
+        - Bantuan
+        - Compass Campus
+        - Kebijakan
+
+        FAQ dibuat sebagai halaman terpisah agar tombol
+        "Lihat Semua FAQ" dan link footer tidak berakhir ke 404.
+        """
+
+        return render_template("faq.html")
+
+
+    @app.get("/faq.html")
+    def legacy_faq():
+        """
+        Alias lama untuk menjaga URL faq.html tetap aman.
+        """
+
+        return redirect(url_for("faq"))
+
     @app.get("/search")
     def search():
         """

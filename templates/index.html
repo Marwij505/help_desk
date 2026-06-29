@@ -1434,7 +1434,7 @@
                         ComCam, sumber data, rekomendasi, dan tiket bantuan.
                     </p>
 
-                    <a href="/faq" class="button button-secondary">
+                    <a href="{{ url_for('faq') }}" class="button button-secondary">
                         Lihat Semua FAQ
                     </a>
 
@@ -1588,8 +1588,8 @@
 
                 <h2>Jelajahi</h2>
 
-                <a href="#program-studi">Cari Kampus</a>
-                <a href="#program-studi">Program Studi</a>
+                <a href="{{ url_for('faq') }}#jelajahi">Cari Kampus</a>
+                <a href="{{ url_for('faq') }}#jelajahi">Program Studi</a>
                 <a href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}">Pemetaan Minat</a>
                 <a href="{{ url_for('recommendation') if current_user.is_authenticated else url_for('auth.login', next=url_for('recommendation')) }}">Bandingkan Pilihan</a>
 
@@ -1600,7 +1600,7 @@
 
                 <h2>Bantuan</h2>
 
-                <a href="#faq">FAQ</a>
+                <a href="{{ url_for('faq') }}#bantuan">FAQ</a>
 
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('ticket') }}">Buat Tiket</a>
@@ -1610,7 +1610,7 @@
                     <a href="{{ url_for('auth.login', next=url_for('ticket')) }}">Tiket Saya</a>
                 {% endif %}
 
-                <a href="#faq">Laporkan Kesalahan Data</a>
+                <a href="{{ url_for('faq') }}#bantuan">Laporkan Kesalahan Data</a>
 
             </div>
 
@@ -1619,10 +1619,10 @@
 
                 <h2>Compass Campus</h2>
 
-                <a href="#beranda">Tentang ComCam</a>
-                <a href="#program-studi">Sumber Data</a>
-                <a href="#faq">Hubungi Kami</a>
-                <a href="#faq">Kerja Sama</a>
+                <a href="{{ url_for('faq') }}#compass-campus">Tentang ComCam</a>
+                <a href="{{ url_for('faq') }}#compass-campus">Sumber Data</a>
+                <a href="{{ url_for('faq') }}#compass-campus">Hubungi Kami</a>
+                <a href="{{ url_for('faq') }}#compass-campus">Kerja Sama</a>
 
             </div>
 
@@ -1631,10 +1631,10 @@
 
                 <h2>Kebijakan</h2>
 
-                <a href="#faq">Kebijakan Privasi</a>
-                <a href="#faq">Syarat dan Ketentuan</a>
-                <a href="#faq">Aksesibilitas</a>
-                <a href="#faq">Disclaimer</a>
+                <a href="{{ url_for('faq') }}#kebijakan">Kebijakan Privasi</a>
+                <a href="{{ url_for('faq') }}#kebijakan">Syarat dan Ketentuan</a>
+                <a href="{{ url_for('faq') }}#kebijakan">Aksesibilitas</a>
+                <a href="{{ url_for('faq') }}#kebijakan">Disclaimer</a>
 
             </div>
 
