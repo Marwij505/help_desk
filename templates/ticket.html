@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <!-- =========================================================
-         HALAMAN TICKET HELP DESK - BABAK 3
+         HALAMAN TICKET HELP DESK - BABAK 3 + PATCH BABAK 4
          File ini sengaja dipisah dari index.html agar proyek rapi.
          Index tetap menjadi homepage + area akun.
          Ticket menjadi modul khusus untuk form dan daftar tiket.
@@ -82,6 +82,12 @@
                 </a>
 
                 {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin_panel') }}" class="nav-primary">
+                            Admin
+                        </a>
+                    {% endif %}
+
                     <a href="{{ url_for('auth.logout') }}" class="nav-danger">
                         Keluar
                     </a>
@@ -281,6 +287,19 @@
                                                 <span>{{ ticket.priority_label }}</span>
                                                 <span>{{ ticket.created_label }}</span>
                                             </div>
+
+                                            {% if ticket.admin_reply_count %}
+                                                <div class="ticket-reply-indicator">
+                                                    Ada balasan admin
+                                                </div>
+                                            {% endif %}
+
+                                            <a
+                                                href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}#detail-tiket"
+                                                class="ticket-detail-link"
+                                            >
+                                                Lihat Detail dan Balasan
+                                            </a>
                                         </article>
                                     {% endfor %}
                                 </div>
@@ -313,6 +332,79 @@
 
                     {% endif %}
                 </div>
+
+                {% if selected_ticket %}
+                    <!-- =================================================
+                         DETAIL TIKET STUDENT
+                         Di bagian ini student membaca balasan admin.
+                         Saat admin menandai tiket selesai, percakapan tetap tampil.
+                         ================================================= -->
+                    <section class="ticket-detail-section" id="detail-tiket" aria-labelledby="ticket-detail-title">
+                        <div class="ticket-detail-card">
+                            <div class="ticket-detail-heading">
+                                <div>
+                                    <span>Detail Tiket</span>
+                                    <h2 id="ticket-detail-title">{{ selected_ticket.subject }}</h2>
+                                    <p>
+                                        Kode {{ selected_ticket.ticket_code }} ·
+                                        {{ selected_ticket.category_label }} ·
+                                        {{ selected_ticket.priority_label }}
+                                    </p>
+                                </div>
+
+                                <span class="ticket-status ticket-status-{{ selected_ticket.status }}">
+                                    {{ selected_ticket.status_label }}
+                                </span>
+                            </div>
+
+                            <div class="ticket-detail-notice">
+                                {% if selected_ticket.status == 'selesai' %}
+                                    Tiket ini sudah diselesaikan admin. Balasan dan riwayat percakapan tetap bisa kamu baca di bawah.
+                                {% elif selected_ticket.admin_reply_count %}
+                                    Admin sudah membalas tiket ini. Baca percakapannya di bawah.
+                                {% else %}
+                                    Tiket sudah terkirim. Admin akan membalas di halaman ini setelah ditinjau.
+                                {% endif %}
+                            </div>
+
+                            <div class="ticket-conversation">
+                                {% for message in ticket_messages %}
+                                    <article class="conversation-message conversation-{{ message.sender_type }}">
+                                        <div class="conversation-avatar">
+                                            {% if message.sender_type == 'admin' %}
+                                                A
+                                            {% else %}
+                                                {{ current_user.full_name[:1] }}
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="conversation-bubble">
+                                            <div class="conversation-top">
+                                                <strong>{{ message.sender_label }}</strong>
+                                                <span>{{ message.created_label }}</span>
+                                            </div>
+
+                                            <p>{{ message.message }}</p>
+                                        </div>
+                                    </article>
+                                {% endfor %}
+                            </div>
+
+                            <div class="ticket-detail-actions">
+                                <a href="{{ url_for('ticket') }}" class="button button-secondary">
+                                    Kembali ke Daftar Tiket
+                                </a>
+
+                                {% if selected_ticket.status != 'selesai' %}
+                                    <a href="#ticket-message" class="button button-primary">
+                                        Buat Tiket Baru
+                                        <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                {% endif %}
             </div>
         </section>
     </main>

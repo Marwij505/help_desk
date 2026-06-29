@@ -50,3 +50,100 @@
         }, 5200);
     }
 })();
+
+
+/* =========================================================
+   PATCH NAVIGASI HALUS DAN BACK-FORWARD CACHE
+   =========================================================
+   Menjaga halaman ticket tidak berubah menjadi putih saat user
+   memakai tombol Back browser, serta memberi transisi keluar.
+   ========================================================= */
+(function () {
+    "use strict";
+
+    const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    function shouldAnimateNavigation(link, event) {
+        if (!link || !link.href) {
+            return false;
+        }
+
+        if (
+            event.defaultPrevented ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+        ) {
+            return false;
+        }
+
+        if (link.target && link.target !== "_self") {
+            return false;
+        }
+
+        const destination = new URL(link.href, window.location.href);
+        const current = new URL(window.location.href);
+
+        if (destination.origin !== current.origin) {
+            return false;
+        }
+
+        if (
+            destination.pathname === current.pathname &&
+            destination.search === current.search &&
+            destination.hash
+        ) {
+            return false;
+        }
+
+        return link.href !== window.location.href;
+    }
+
+    document.querySelectorAll("a[href]").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+            if (!shouldAnimateNavigation(link, event)) {
+                return;
+            }
+
+            if (prefersReducedMotion || typeof document.body.animate !== "function") {
+                return;
+            }
+
+            event.preventDefault();
+            const destination = link.href;
+
+            const animation = document.body.animate(
+                [{ opacity: 1 }, { opacity: 0 }],
+                {
+                    duration: 210,
+                    easing: "ease-in",
+                    fill: "forwards"
+                }
+            );
+
+            let completed = false;
+
+            function go() {
+                if (completed) {
+                    return;
+                }
+                completed = true;
+                window.location.href = destination;
+            }
+
+            animation.addEventListener("finish", go);
+            window.setTimeout(go, 380);
+        });
+    });
+
+    window.addEventListener("pageshow", function (event) {
+        document.body.style.opacity = "";
+
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+})();

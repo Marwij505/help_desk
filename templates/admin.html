@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- =========================================================
+         HALAMAN ADMIN HELP DESK - BABAK 4
+         File ini khusus untuk panel admin.
+         User biasa tetap memakai index.html dan ticket.html.
+         ========================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Panel Admin Compass Campus untuk mengelola tiket Help Desk pengguna."
+    >
+    <meta name="author" content="Compass Campus Team">
+
+    <title>Admin Help Desk | Compass Campus</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/admin.css') }}"
+    >
+</head>
+
+<body class="admin-page">
+
+    <!-- =========================================================
+         SVG SPRITE
+         Ikon disimpan lokal di halaman agar tidak butuh library luar.
+         ========================================================= -->
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-compass" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M15.5 8.5 14 14l-5.5 1.5L10 10z"></path>
+        </symbol>
+
+        <symbol id="icon-home" viewBox="0 0 24 24">
+            <path d="M3 11 12 3l9 8"></path>
+            <path d="M5 10v10h14V10"></path>
+            <path d="M9 20v-6h6v6"></path>
+        </symbol>
+
+        <symbol id="icon-ticket" viewBox="0 0 24 24">
+            <path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"></path>
+            <path d="M13 5v2"></path>
+            <path d="M13 11v2"></path>
+            <path d="M13 17v2"></path>
+        </symbol>
+
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16 16 4 4"></path>
+        </symbol>
+
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+        </symbol>
+    </svg>
+
+
+    <!-- =========================================================
+         HEADER PANEL ADMIN
+         ========================================================= -->
+    <header class="admin-header">
+        <div class="container admin-header-container">
+            <a href="{{ url_for('index') }}" class="brand" aria-label="Compass Campus Admin">
+                <span class="brand-icon">
+                    <svg aria-hidden="true"><use href="#icon-compass"></use></svg>
+                </span>
+                <span class="brand-text">
+                    <strong>Compass Campus</strong>
+                    <small>Admin Help Desk</small>
+                </span>
+            </a>
+
+            <nav class="admin-nav" aria-label="Navigasi admin">
+                <a href="{{ url_for('index') }}">
+                    <svg aria-hidden="true"><use href="#icon-home"></use></svg>
+                    Beranda
+                </a>
+                <a href="{{ url_for('ticket') }}">
+                    <svg aria-hidden="true"><use href="#icon-ticket"></use></svg>
+                    Ticket User
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="nav-danger">
+                    Keluar
+                </a>
+            </nav>
+        </div>
+    </header>
+
+
+    <!-- =========================================================
+         KONTEN UTAMA ADMIN
+         ========================================================= -->
+    <main class="admin-main">
+
+        <section class="admin-hero">
+            <div class="container admin-hero-grid">
+                <div class="admin-hero-content">
+                    <span class="eyebrow">Babak 4 · Panel Admin Help Desk</span>
+                    <h1>Kelola tiket bantuan pengguna dari satu halaman.</h1>
+                    <p>
+                        Admin dapat memantau tiket masuk, memfilter prioritas,
+                        mengubah status, dan memberi balasan awal kepada pengguna.
+                    </p>
+                </div>
+
+                <aside class="admin-user-card">
+                    <span class="avatar">{{ current_user.full_name[:1] }}</span>
+                    <div>
+                        <small>Login sebagai admin</small>
+                        <strong>{{ current_user.full_name }}</strong>
+                        <p>{{ current_user.email }}</p>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+
+        <section class="admin-section">
+            <div class="container">
+
+                <!-- Pesan sukses atau error dari backend Flask -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="admin-flash-list" role="status" aria-live="polite">
+                            {% for category, message in messages %}
+                                <div class="admin-flash admin-flash-{{ category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+
+                <!-- =====================================================
+                     KARTU RINGKASAN TIKET
+                     ===================================================== -->
+                <div class="summary-grid" aria-label="Ringkasan tiket admin">
+                    <article class="summary-card">
+                        <span>Total Tiket</span>
+                        <strong>{{ admin_summary.total }}</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>Dikirim</span>
+                        <strong>{{ admin_summary.submitted }}</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>Diproses</span>
+                        <strong>{{ admin_summary.in_progress }}</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>Selesai</span>
+                        <strong>{{ admin_summary.closed }}</strong>
+                    </article>
+                    <article class="summary-card urgent">
+                        <span>Prioritas Tinggi Aktif</span>
+                        <strong>{{ admin_summary.high_priority_open }}</strong>
+                    </article>
+                </div>
+
+
+                <!-- =====================================================
+                     FILTER ADMIN
+                     Filter memakai method GET agar hasil mudah di-refresh.
+                     ===================================================== -->
+                <form class="admin-filter-card" method="GET" action="{{ url_for('admin_panel') }}">
+                    <div class="filter-heading">
+                        <span>Filter Tiket</span>
+                        <h2>Cari tiket yang perlu ditangani.</h2>
+                    </div>
+
+                    <div class="filter-grid">
+                        <label>
+                            <span>Kata Kunci</span>
+                            <div class="search-field">
+                                <svg aria-hidden="true"><use href="#icon-search"></use></svg>
+                                <input
+                                    type="search"
+                                    name="q"
+                                    value="{{ search_query }}"
+                                    placeholder="Kode, judul, nama, atau email"
+                                >
+                            </div>
+                        </label>
+
+                        <label>
+                            <span>Status</span>
+                            <select name="status">
+                                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>Semua Status</option>
+                                {% for value, label in ticket_status_labels.items() %}
+                                    <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Kategori</span>
+                            <select name="category">
+                                <option value="all" {% if selected_category == 'all' %}selected{% endif %}>Semua Kategori</option>
+                                {% for value, label in ticket_category_options %}
+                                    <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Prioritas</span>
+                            <select name="priority">
+                                <option value="all" {% if selected_priority == 'all' %}selected{% endif %}>Semua Prioritas</option>
+                                {% for value, label in ticket_priority_options %}
+                                    <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button type="submit" class="button-primary">
+                            Terapkan Filter
+                            <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                        </button>
+                        <a href="{{ url_for('admin_panel') }}" class="button-secondary">
+                            Reset
+                        </a>
+                    </div>
+                </form>
+
+
+                <!-- =====================================================
+                     DAFTAR TIKET ADMIN
+                     ===================================================== -->
+                <section class="admin-ticket-list" aria-labelledby="ticket-list-title">
+                    <div class="list-heading">
+                        <span>Daftar Tiket</span>
+                        <h2 id="ticket-list-title">Tiket pengguna terbaru.</h2>
+                    </div>
+
+                    {% if admin_tickets %}
+                        <div class="ticket-admin-grid">
+                            {% for ticket in admin_tickets %}
+                                <article class="admin-ticket-card status-{{ ticket.status }} priority-{{ ticket.priority }}">
+
+                                    <div class="ticket-card-top">
+                                        <div>
+                                            <span class="ticket-code">{{ ticket.ticket_code }}</span>
+                                            <h3>{{ ticket.subject }}</h3>
+                                        </div>
+                                        <span class="status-badge status-badge-{{ ticket.status }}">
+                                            {{ ticket.status_label }}
+                                        </span>
+                                    </div>
+
+                                    <div class="ticket-user-line">
+                                        <strong>{{ ticket.user_name }}</strong>
+                                        <span>{{ ticket.user_email }}</span>
+                                    </div>
+
+                                    <p class="ticket-message">
+                                        {{ ticket.message }}
+                                    </p>
+
+                                    <div class="ticket-meta-grid">
+                                        <span>Kategori: <strong>{{ ticket.category_label }}</strong></span>
+                                        <span>Prioritas: <strong>{{ ticket.priority_label }}</strong></span>
+                                        <span>Dibuat: <strong>{{ ticket.created_label }}</strong></span>
+                                        <span>Update: <strong>{{ ticket.updated_label }}</strong></span>
+                                        <span>Pesan: <strong>{{ ticket.message_count }}</strong></span>
+                                    </div>
+
+                                    <div class="ticket-admin-actions">
+
+                                        <!-- Form ubah status tiket -->
+                                        <form
+                                            class="status-form"
+                                            method="POST"
+                                            action="{{ url_for('admin_update_ticket_status', ticket_id=ticket.id) }}"
+                                        >
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                            <label>
+                                                <span>Ubah Status</span>
+                                                <select name="status">
+                                                    {% for value, label in ticket_status_labels.items() %}
+                                                        <option value="{{ value }}" {% if ticket.status == value %}selected{% endif %}>
+                                                            {{ label }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </label>
+
+                                            <button type="submit" class="small-button">
+                                                Simpan Status
+                                            </button>
+                                        </form>
+
+                                        <!-- Form balasan admin -->
+                                        <form
+                                            class="reply-form"
+                                            method="POST"
+                                            action="{{ url_for('admin_reply_ticket', ticket_id=ticket.id) }}"
+                                            data-admin-reply-form
+                                        >
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                            <label>
+                                                <span>Balasan Admin</span>
+                                                <textarea
+                                                    name="reply_message"
+                                                    rows="3"
+                                                    maxlength="2000"
+                                                    placeholder="Tulis balasan singkat untuk pengguna..."
+                                                    data-admin-reply-message
+                                                ></textarea>
+                                            </label>
+
+                                            <div class="reply-footer">
+                                                <small data-admin-reply-counter>0/2000 karakter</small>
+                                                <button type="submit" class="small-button primary">
+                                                    Kirim Balasan
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <strong>Belum ada tiket yang cocok.</strong>
+                            <p>Ubah filter atau tunggu tiket baru dari pengguna.</p>
+                        </div>
+                    {% endif %}
+                </section>
+
+            </div>
+        </section>
+    </main>
+
+
+    <script
+        src="{{ url_for('static', filename='js/admin.js') }}"
+        defer
+    ></script>
+</body>
+</html>

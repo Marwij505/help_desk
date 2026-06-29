@@ -1,0 +1,795 @@
+/* =========================================================
+   COMPASS CAMPUS - ADMIN HELP DESK BABAK 4
+   File: static/css/admin.css
+
+   Fungsi file:
+   1. Mengatur tampilan Panel Admin Help Desk.
+   2. Memisahkan style admin dari index.css dan ticket.css.
+   3. Menjaga struktur proyek agar mudah dikembangkan per babak.
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+    --color-primary: #5b5cf6;
+    --color-primary-dark: #4144d8;
+    --color-primary-soft: #eef0ff;
+    --color-navy-950: #050b20;
+    --color-navy-900: #08122f;
+    --color-white: #ffffff;
+    --color-background: #f6f7fb;
+    --color-card: #ffffff;
+    --color-text: #10162a;
+    --color-text-soft: #636b82;
+    --color-border: #e5e8f1;
+    --color-danger: #d63d3d;
+    --color-success: #159f7f;
+    --color-warning: #d9851d;
+    --shadow-medium: 0 18px 50px rgba(15, 23, 55, 0.12);
+    --radius-medium: 18px;
+    --radius-large: 28px;
+    --radius-pill: 999px;
+    --container-width: 1180px;
+    --transition-fast: 180ms ease;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+svg {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.container {
+    width: min(calc(100% - 40px), var(--container-width));
+    margin-inline: auto;
+}
+
+.svg-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.admin-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1d2236;
+    color: var(--color-white);
+}
+
+.admin-header-container {
+    display: flex;
+    min-height: 86px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-icon {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border-radius: 15px;
+    background: linear-gradient(135deg, var(--color-primary), #4f8cff);
+    box-shadow: 0 12px 28px rgba(91, 92, 246, 0.35);
+}
+
+.brand-icon svg {
+    width: 23px;
+    height: 23px;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.brand-text strong {
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.brand-text small {
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.admin-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-nav a {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-white);
+    font-weight: 800;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.admin-nav a:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+.admin-nav svg {
+    width: 18px;
+    height: 18px;
+}
+
+.admin-nav .nav-danger {
+    background: rgba(214, 61, 61, 0.12);
+    color: #ffe1e1;
+}
+
+.admin-hero {
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 78% 22%, rgba(91, 92, 246, 0.32), transparent 26%),
+        linear-gradient(120deg, var(--color-navy-950), var(--color-navy-900));
+    color: var(--color-white);
+}
+
+.admin-hero-grid {
+    display: grid;
+    min-height: 360px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    align-items: center;
+    gap: 34px;
+    padding-block: 72px;
+}
+
+.eyebrow,
+.filter-heading span,
+.list-heading span {
+    display: inline-flex;
+    margin-bottom: 12px;
+    color: #c1c4ff;
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.admin-hero h1 {
+    max-width: 760px;
+    margin: 0 0 18px;
+    font-size: clamp(2.4rem, 5vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: -0.065em;
+    line-height: 1.02;
+}
+
+.admin-hero p {
+    max-width: 620px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 1.02rem;
+}
+
+.admin-user-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 52px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(12px);
+}
+
+.avatar {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #6372ff, #4f8cff);
+    color: var(--color-white);
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+.admin-user-card small {
+    display: block;
+    margin-bottom: 4px;
+    color: #c7caff;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-user-card strong {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+
+.admin-user-card p {
+    margin: 2px 0 0;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.admin-section {
+    padding-block: 58px 80px;
+}
+
+.admin-flash-list {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.admin-flash {
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-weight: 800;
+}
+
+.admin-flash-success {
+    border: 1px solid rgba(21, 159, 127, 0.24);
+    background: #e8f8f3;
+    color: #127d65;
+}
+
+.admin-flash-error {
+    border: 1px solid rgba(214, 61, 61, 0.24);
+    background: #fff0f0;
+    color: #b83030;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.summary-card {
+    min-height: 118px;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+    background: var(--color-card);
+    box-shadow: 0 12px 34px rgba(15, 23, 55, 0.06);
+}
+
+.summary-card span {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-text-soft);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.summary-card strong {
+    color: var(--color-primary-dark);
+    font-size: 2.1rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.summary-card.urgent strong {
+    color: var(--color-danger);
+}
+
+.admin-filter-card,
+.admin-ticket-card,
+.empty-state {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-large);
+    background: var(--color-card);
+    box-shadow: var(--shadow-medium);
+}
+
+.admin-filter-card {
+    margin-bottom: 28px;
+    padding: 28px;
+}
+
+.filter-heading h2,
+.list-heading h2 {
+    margin: 0;
+    font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+    font-weight: 900;
+    letter-spacing: -0.045em;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: 1.2fr repeat(3, 0.8fr);
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.filter-grid label,
+.status-form label,
+.reply-form label {
+    display: grid;
+    gap: 8px;
+}
+
+.filter-grid label > span,
+.status-form span,
+.reply-form span {
+    color: var(--color-text);
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: #fbfcff;
+    color: var(--color-text);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input,
+select {
+    min-height: 52px;
+    padding: 0 14px;
+}
+
+textarea {
+    min-height: 106px;
+    padding: 14px;
+    resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: rgba(91, 92, 246, 0.48);
+    box-shadow: 0 0 0 4px rgba(91, 92, 246, 0.1);
+}
+
+.search-field {
+    position: relative;
+}
+
+.search-field svg {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    width: 19px;
+    height: 19px;
+    color: var(--color-text-soft);
+    transform: translateY(-50%);
+}
+
+.search-field input {
+    padding-left: 43px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.button-primary,
+.button-secondary,
+.small-button {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 13px;
+    font-weight: 900;
+}
+
+.button-primary {
+    padding: 12px 18px;
+    background: linear-gradient(135deg, var(--color-primary), #7b7cff);
+    color: var(--color-white);
+    box-shadow: 0 12px 26px rgba(91, 92, 246, 0.25);
+}
+
+.button-primary svg {
+    width: 18px;
+    height: 18px;
+}
+
+.button-secondary {
+    padding: 12px 18px;
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+    color: var(--color-primary-dark);
+}
+
+.list-heading {
+    margin: 28px 0 18px;
+}
+
+.ticket-admin-grid {
+    display: grid;
+    gap: 18px;
+}
+
+.admin-ticket-card {
+    padding: 24px;
+}
+
+.ticket-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ticket-code {
+    display: inline-flex;
+    margin-bottom: 8px;
+    color: var(--color-primary-dark);
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.admin-ticket-card h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 11px;
+    border-radius: var(--radius-pill);
+    font-size: 0.76rem;
+    font-weight: 900;
+}
+
+.status-badge-dikirim {
+    background: #eef0ff;
+    color: var(--color-primary-dark);
+}
+
+.status-badge-diproses {
+    background: #fff5e7;
+    color: var(--color-warning);
+}
+
+.status-badge-selesai {
+    background: #e8f8f3;
+    color: var(--color-success);
+}
+
+.ticket-user-line {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    color: var(--color-text-soft);
+}
+
+.ticket-user-line strong {
+    color: var(--color-text);
+}
+
+.ticket-message {
+    margin: 16px 0;
+    color: var(--color-text-soft);
+}
+
+.ticket-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.ticket-meta-grid span {
+    padding: 11px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 13px;
+    background: #fbfcff;
+    color: var(--color-text-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.ticket-meta-grid strong {
+    display: block;
+    margin-top: 4px;
+    color: var(--color-text);
+}
+
+.ticket-admin-actions {
+    display: grid;
+    grid-template-columns: minmax(240px, 0.7fr) minmax(0, 1.3fr);
+    gap: 16px;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-border);
+}
+
+.status-form,
+.reply-form {
+    display: grid;
+    gap: 12px;
+}
+
+.small-button {
+    min-height: 42px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+    color: var(--color-primary-dark);
+}
+
+.small-button.primary {
+    border: 0;
+    background: linear-gradient(135deg, var(--color-primary), #7b7cff);
+    color: var(--color-white);
+}
+
+.reply-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.reply-footer small {
+    color: var(--color-text-soft);
+    font-weight: 700;
+}
+
+.empty-state {
+    padding: 34px;
+    text-align: center;
+}
+
+.empty-state strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.empty-state p {
+    margin: 0;
+    color: var(--color-text-soft);
+}
+
+@media (max-width: 980px) {
+    .admin-hero-grid,
+    .filter-grid,
+    .ticket-admin-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ticket-meta-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .container {
+        width: min(calc(100% - 24px), var(--container-width));
+    }
+
+    .admin-header-container,
+    .admin-nav,
+    .ticket-card-top,
+    .reply-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-nav a,
+    .button-primary,
+    .button-secondary,
+    .small-button {
+        width: 100%;
+    }
+
+    .summary-grid,
+    .ticket-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-hero-grid {
+        padding-block: 48px;
+    }
+}
+
+
+/* =========================================================
+   PATCH UX - TRANSISI DAN ANIMASI MODUL ADMIN
+   =========================================================
+   Tujuan:
+   1. Menyamakan panel admin dengan base style Compass Campus.
+   2. Membuat kartu statistik, filter, dan tiket terasa hidup.
+   3. Tetap ringan untuk pengujian IMK lokal.
+   ========================================================= */
+
+@keyframes comcam-page-enter {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes comcam-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes comcam-slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+body.admin-page {
+    animation: comcam-page-enter 320ms ease both;
+}
+
+.admin-header {
+    animation: comcam-slide-down 460ms ease both;
+}
+
+.admin-hero-content,
+.admin-profile-card,
+.summary-card,
+.admin-filter-card,
+.admin-ticket-card,
+.admin-flash {
+    opacity: 0;
+    animation: comcam-fade-up 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.admin-hero-content {
+    animation-delay: 80ms;
+}
+
+.admin-profile-card {
+    animation-delay: 170ms;
+}
+
+.summary-card:nth-child(1) { animation-delay: 70ms; }
+.summary-card:nth-child(2) { animation-delay: 120ms; }
+.summary-card:nth-child(3) { animation-delay: 170ms; }
+.summary-card:nth-child(4) { animation-delay: 220ms; }
+.summary-card:nth-child(5) { animation-delay: 270ms; }
+
+.admin-filter-card {
+    animation-delay: 180ms;
+}
+
+.admin-ticket-card:nth-child(odd) {
+    animation-delay: 120ms;
+}
+
+.admin-ticket-card:nth-child(even) {
+    animation-delay: 190ms;
+}
+
+.summary-card,
+.admin-ticket-card,
+.admin-nav a,
+.button-primary,
+.button-secondary,
+button,
+select,
+input,
+textarea {
+    transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        border-color var(--transition-fast),
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        opacity var(--transition-fast);
+}
+
+.summary-card:hover,
+.admin-ticket-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-medium);
+}
+
+.admin-reply-button.is-loading,
+button.is-loading {
+    opacity: 0.78;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+    }
+}

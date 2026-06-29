@@ -611,6 +611,12 @@ def login():
                 "Kamu berhasil keluar dari akun."
             )
 
+        elif request.args.get("session_expired") == "1":
+            error_message = (
+                "Sesi login berakhir karena Remember Me tidak aktif "
+                "atau server baru saja dimulai ulang. Silakan masuk kembali."
+            )
+
         if request.args.get("required") == "1":
             error_message = (
                 "Silakan masuk terlebih dahulu untuk "
@@ -801,7 +807,25 @@ def login():
                 500,
             )
 
+        # -------------------------------------------------
+        # Mengatur perilaku Remember Me
+        # -------------------------------------------------
+        # Jika checkbox "Ingat saya" aktif, Flask-Login membuat cookie
+        # remember yang bisa mempertahankan login sampai 7 hari.
+        # Jika checkbox tidak aktif, akun hanya bertahan pada session browser.
+        # Saat browser ditutup, user harus login ulang.
         session.permanent = remember_user
+        session["remember_enabled"] = "1" if remember_user else "0"
+        session["server_boot_id"] = current_app.config.get(
+            "SERVER_BOOT_ID",
+            "",
+        )
+
+        if not remember_user:
+            # Jika user sebelumnya pernah login dengan Remember Me, cookie lama
+            # harus dibersihkan. Tanpa baris ini, browser bisa terlihat tetap
+            # "nyantol" walaupun login berikutnya tidak mencentang Remember Me.
+            session["_remember"] = "clear"
 
         # -------------------------------------------------
         # Memperbarui login terakhir

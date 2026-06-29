@@ -31,7 +31,7 @@
 
 </head>
 
-<body>
+<body data-authenticated="{{ 'true' if current_user.is_authenticated else 'false' }}">
 
     <!-- =========================================================
          KUMPULAN IKON SVG
@@ -224,6 +224,12 @@
                         Akun Saya
                     </a>
 
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin_panel') }}" class="nav-link">
+                            Admin
+                        </a>
+                    {% endif %}
+
                     <a href="{{ url_for('auth.logout') }}" class="nav-link">
                         Keluar
                     </a>
@@ -256,6 +262,12 @@
                     <a href="#akun-saya" class="button button-login button-account">
                         Akun Saya
                     </a>
+
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin_panel') }}" class="button button-ghost-header">
+                            Admin
+                        </a>
+                    {% endif %}
 
                     <a href="{{ url_for('auth.logout') }}" class="button button-ghost-header">
                         Keluar
