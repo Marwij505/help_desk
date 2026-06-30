@@ -31,7 +31,7 @@ Status proyek: Dalam tahap pengembangan (MASIH LAMA DAN RIBET tapi cocok untuk p
 
     -validasi 3 (cek sendiri) = python -m pip list
 
-7.test library dan code
+7.test library dan code di terminal
 
     -python -c "import secrets; print(secrets.token_hex(32))" -> gunakan hasilnya dan ubah didalam .env di bagian "FLASK_SECRET_KEY"
 
