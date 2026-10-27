@@ -114,7 +114,7 @@ class Config:
     DB_PORT = int(
         os.getenv(
             "DB_PORT",
-            "3306",
+            "3308",
         )
     )
 
